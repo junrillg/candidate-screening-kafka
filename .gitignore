@@ -1,0 +1,40 @@
+# Local secrets, generated state and machine configuration
+.env
+.env.*
+!.env.example
+.secrets/
+**/.secrets/
+*.local.json
+appsettings.Local.json
+appsettings.*.local.json
+config.json
+profile.json
+tracker.json
+architecture-labs/
+**/architecture-labs/
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Build and package output
+**/node_modules/
+**/bin/
+**/obj/
+**/dist/
+**/coverage/
+**/TestResults/
+**/playwright-report/
+**/test-results/
+.artifacts/
+.cache/
+
+# Local data and logs
+.data/
+logs/
+*.log
+*.db
+*.sqlite*
+.DS_Store
+.idea/
+.vscode/

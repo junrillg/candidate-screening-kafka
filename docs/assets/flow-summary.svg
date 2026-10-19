@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="460" viewBox="0 0 1100 460" role="img" aria-labelledby="title desc">
+  <title id="title">Candidate screening event flow</title>
+  <desc id="desc">Planned architecture. React submits to the Candidates API, which stores candidate state and outbox in PostgreSQL. Kafka delivers submitted events to the Screening worker. Ollama proposes evidence. The worker commits validated results and a completion outbox in its own database. Completion events return through Kafka to saved candidate status and browser notifications.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#44566c"/></marker>
+    <marker id="return" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#146759"/></marker>
+  </defs>
+  <rect width="1100" height="460" rx="16" fill="#f7f9fc"/>
+  <g font-family="Arial, sans-serif" fill="#15283e">
+    <text x="32" y="38" font-size="22" font-weight="700">Candidate submission → validated screening result</text>
+    <text x="32" y="63" font-size="14" fill="#516174">Planned event flow · Separate service ownership · Local inference</text>
+    <g stroke="#44566c" stroke-width="2" fill="none" marker-end="url(#arrow)">
+      <path d="M220 166H286"/><path d="M486 166H552" stroke-dasharray="7 5"/>
+      <path d="M718 166H784" stroke-dasharray="7 5"/>
+      <path d="M386 204V264"/><path d="M904 204V264"/>
+      <path d="M904 130V107"/>
+    </g>
+    <g fill="#ffffff" stroke="#b9c7d8" stroke-width="1.5">
+      <rect x="32" y="130" width="188" height="74" rx="10"/>
+      <rect x="286" y="130" width="200" height="74" rx="10"/>
+      <rect x="552" y="130" width="166" height="74" rx="10"/>
+      <rect x="784" y="130" width="240" height="74" rx="10"/>
+      <rect x="286" y="264" width="200" height="70" rx="10"/>
+      <rect x="784" y="264" width="240" height="70" rx="10"/>
+      <rect x="822" y="77" width="164" height="30" rx="8" fill="#e6f3ef" stroke="#7baca0"/>
+    </g>
+    <g text-anchor="middle">
+      <g font-size="17" font-weight="700">
+        <text x="126" y="160">React</text><text x="386" y="160">Candidates API</text>
+        <text x="635" y="160">Kafka</text><text x="904" y="160">Screening worker</text>
+      </g>
+      <g font-size="13" fill="#516174">
+        <text x="126" y="183">Submit · Track · Review</text><text x="386" y="183">Validate · Accept · Authorize</text>
+        <text x="635" y="183">Retained events</text><text x="904" y="183">Extract · Validate · Score</text>
+        <text x="253" y="153">POST</text><text x="519" y="121">Submitted</text><text x="751" y="121">Consume</text>
+      </g>
+      <text x="904" y="98" font-size="14" fill="#146759" font-weight="700">Ollama evidence</text>
+      <text x="386" y="291" font-size="15" font-weight="700">Candidates database</text>
+      <text x="386" y="314" font-size="13" fill="#516174">State · Notices · Outbox</text>
+      <text x="904" y="291" font-size="15" font-weight="700">Screening database</text>
+      <text x="904" y="314" font-size="13" fill="#516174">Inbox · Result · Outbox</text>
+    </g>
+    <g fill="none" stroke="#146759" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#return)">
+      <path d="M904 334V379H635V207"/><path d="M552 188H489"/>
+      <path d="M286 188H223"/>
+    </g>
+    <text x="660" y="369" font-size="14" fill="#146759">Durable completion event</text>
+    <text x="120" y="233" font-size="13" fill="#146759">Saved status + authorized change signal</text>
+    <text x="32" y="430" font-size="14" fill="#516174">Database records are durable truth. Live signals prompt the browser to reconcile owned state.</text>
+  </g>
+</svg>

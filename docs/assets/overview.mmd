@@ -1,0 +1,37 @@
+flowchart TB
+    subgraph Browser["PLANNED · synthetic browser"]
+        UI["1 · React form"]
+        P["2b · Processing<br/>navigation available"]
+        R["8 · Authorized result<br/>or explicit notice link"]
+    end
+    subgraph Business["PLANNED · small local Compose deployment"]
+        API["2 · Candidates API"]
+        CDB[("Candidates DB<br/>candidate · status<br/>notice · outbox")]
+        K["Kafka<br/>submitted · completed<br/>changed"]
+        W["4 · Screening worker"]
+        AI["Ollama<br/>bounded extraction"]
+        SDB[("Screening DB<br/>inbox · result · outbox")]
+    end
+    subgraph Operations["PLANNED · loopback operations"]
+        V["Kafbat · pgAdmin<br/>API reference"]
+        O["OTel collector<br/>→ OpenObserve OSS"]
+    end
+    UI -->|"2a · validated POST<br/>cookie + antiforgery"| API
+    API -->|"candidate + outbox<br/>transaction"| CDB
+    API -->|"202 + candidate ID"| P
+    CDB -. "3 · confirmed relay" .-> K
+    K -. "4 · candidate-submitted" .-> W
+    W -->|"4a · evidence request"| AI
+    AI -->|"4b · untrusted evidence<br/>validated by worker"| W
+    W -->|"4c · atomic inbox<br/>result + outbox"| SDB
+    SDB -. "5 · completion relay" .-> K
+    K -. "6 · screening-completed" .-> API
+    API -->|"6 · atomic status<br/>notice + outbox"| CDB
+    K -. "7 · wakeup to each API replica" .-> API
+    API -. "8 · owner SSE<br/>bounded reconciliation" .-> R
+    P -->|"same job and session only"| R
+    API -. "safe telemetry" .-> O
+    W -. "safe telemetry" .-> O
+    V -. "inspection only" .-> K
+    V -. "read-only" .-> CDB
+    V -. "read-only" .-> SDB
