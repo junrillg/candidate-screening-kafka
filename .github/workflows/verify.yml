@@ -107,7 +107,6 @@ jobs:
           - language: javascript
             build-mode: none
     env:
-      GRADLE_USER_HOME: ${{ runner.temp }}/akhq-gradle
       GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx1024m -Dorg.gradle.workers.max=1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -117,6 +116,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          echo "GRADLE_USER_HOME=$RUNNER_TEMP/akhq-gradle" >> "$GITHUB_ENV"
           mkdir -p .akhq-codeql/source .akhq-codeql/evidence
           cd .akhq-codeql
           curl --fail --location --retry 2 --max-time 120 https://codeload.github.com/tchiotludo/akhq/tar.gz/725a615c22bb38a04c9e1b01e48bb46a7e480ee4 -o source.tgz
