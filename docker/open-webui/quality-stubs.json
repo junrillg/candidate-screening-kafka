@@ -1,0 +1,59 @@
+{
+  "packages": {
+    "types-psycopg2": {
+      "bytes": 24964,
+      "filename": "types_psycopg2-2.9.21.20260724-py3-none-any.whl",
+      "licenseExpression": "Apache-2.0",
+      "publisherMetadataSha256": "940db5556c534adbd68b59476f74289c499fc51b23b5bb1a1cde97973356cb38",
+      "publisherMetadataUrl": "https://pypi.org/pypi/types-psycopg2/2.9.21.20260724/json",
+      "requiresDist": [],
+      "requiresPython": ">=3.10",
+      "retainedLicenseFiles": {
+        "types_psycopg2-2.9.21.20260724.dist-info/licenses/LICENSE": "295f8538c94ae5c3043301cf7cff1c852dab6a786a8ddee471e061b40d5ecabe"
+      },
+      "runtimeApiTarget": "2.9.12",
+      "sha256": "4f87890dd06cea99e3bb0536330ffc2a7320e69059dc1ee0e2c884ef2718f2b4",
+      "stubFiles": [
+        "psycopg2-stubs/__init__.pyi",
+        "psycopg2-stubs/_ipaddress.pyi",
+        "psycopg2-stubs/_json.pyi",
+        "psycopg2-stubs/_psycopg.pyi",
+        "psycopg2-stubs/_range.pyi",
+        "psycopg2-stubs/errorcodes.pyi",
+        "psycopg2-stubs/errors.pyi",
+        "psycopg2-stubs/extensions.pyi",
+        "psycopg2-stubs/extras.pyi",
+        "psycopg2-stubs/pool.pyi",
+        "psycopg2-stubs/sql.pyi",
+        "psycopg2-stubs/tz.pyi"
+      ],
+      "url": "https://files.pythonhosted.org/packages/cb/90/1e77eb76030bb5feb249ecb41cd7647c6ae831ec7bd2b61a61beecac4029/types_psycopg2-2.9.21.20260724-py3-none-any.whl",
+      "version": "2.9.21.20260724"
+    },
+    "types-pytz": {
+      "bytes": 10125,
+      "filename": "types_pytz-2026.2.0.20260518-py3-none-any.whl",
+      "licenseExpression": "Apache-2.0",
+      "publisherMetadataSha256": "5cda51d4a1e164bb38fa77b73d7bbd1740b442b559cc614207683ef158784ee2",
+      "publisherMetadataUrl": "https://pypi.org/pypi/types-pytz/2026.2.0.20260518/json",
+      "requiresDist": [],
+      "requiresPython": ">=3.10",
+      "retainedLicenseFiles": {
+        "types_pytz-2026.2.0.20260518.dist-info/licenses/LICENSE": "295f8538c94ae5c3043301cf7cff1c852dab6a786a8ddee471e061b40d5ecabe"
+      },
+      "runtimeApiTarget": "2026.2",
+      "sha256": "3a12eaa38f476bd650902a9c9bb442f03f3c7dee2be5c5848bce61bd708d205a",
+      "stubFiles": [
+        "pytz-stubs/__init__.pyi",
+        "pytz-stubs/exceptions.pyi",
+        "pytz-stubs/lazy.pyi",
+        "pytz-stubs/reference.pyi",
+        "pytz-stubs/tzfile.pyi",
+        "pytz-stubs/tzinfo.pyi"
+      ],
+      "url": "https://files.pythonhosted.org/packages/62/89/41e80670779a223d8bc8bc83019a619988cfa5c432cedac5cec23884fbc4/types_pytz-2026.2.0.20260518-py3-none-any.whl",
+      "version": "2026.2.0.20260518"
+    }
+  },
+  "scope": "Quality-only maintained stub packages; never application/compiler/runtime dependency inputs"
+}

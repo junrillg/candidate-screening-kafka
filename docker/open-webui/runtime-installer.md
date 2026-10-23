@@ -1,19 +1,21 @@
 # Runtime installer source route
 
-The application needs pip for its existing Function/Tool dependency installer. This local pip derivative keeps that API and replaces its bundled urllib3 with 2.8.0 and msgpack with 1.2.1. It retains pip's nine upstream vendoring patches, the complete regenerated CycloneDX SBOM, the setuptools 70.3.0 `pkg_resources` subset, and all upstream/vendor licenses. The compiler and application bootstrap continue to use their original pinned installer inputs.
+Open WebUI's Function/Tool dependency installer requires pip. This local derivative preserves that API and replaces its bundled urllib3 with 2.8.0 and msgpack with 1.2.1. It retains pip's upstream vendoring patches, regenerated CycloneDX SBOM, the setuptools 70.3.0 `pkg_resources` subset and all upstream/vendor licenses. Compiler and application bootstrap stages use their original pinned installer inputs.
 
-`runtime-installer.json` supplies public immutable source/artifact URLs and hashes, the 23-package build tool closure, all 18 vendor inputs, exact retained licenses and independently reproduced whole-wheel output hashes. `runtime-vendor.txt` stays in the format consumed by pip's own vendoring/debug code. `runtime-installer-tools.lock` admits only hash-pinned wheels. No personal directory or locally built binary is an input to this route.
+`runtime-installer.json` defines immutable source/artifact URLs and hashes, the build-tool closure, vendor inputs, retained licenses and whole-wheel output hashes. `runtime-vendor.txt` uses pip's native vendoring/debug format. `runtime-installer-tools.lock` admits only hash-pinned wheels; the source route requires no personal directories or prebuilt local binaries.
 
-From the repository root, the standalone source route is:
+From the repository root:
 
 ```sh
 docker buildx build --platform linux/arm64 -f docker/open-webui/Dockerfile.runtime-installer \
   --target runtime-installer-export --output type=local,dest=runtime-installer-output .
 ```
 
-Run it in the same externally bounded single-worker builder used for the main image. It fetches exact source/tool/vendor artifacts, admits build-only Git with normal Alpine signature verification, records full before/after APK inventories and enforces the exact reviewed base and 12-package addition checksums/versions/architectures, then runs the standard `vendoring sync -v` and PEP517 build offline. Any base mutation/removal or unexpected tool delta fails before artifact building. Pure Python msgpack uses the publisher-supported `MSGPACK_PUREPYTHON=1`. The helper rejects different output wheel hashes and incomplete/changed licenses, SBOM or RECORD. The output includes only the two wheels, their generated installation file inventory and build-only APK admission records. This source route has not yet passed a new execution gate; the output hashes come from the earlier exact-input artifact proof.
+Use an externally bounded single-worker builder. The recipe fetches exact source/tool/vendor artifacts and admits build-only Git through normal Alpine signature verification. Complete APK inventories enforce the reviewed base and exact build-only additions, including checksums, versions and architectures; unexpected changes or removals fail before artifact building. Standard `vendoring sync -v` and PEP517 builds run offline. Pure Python msgpack uses the publisher-supported `MSGPACK_PUREPYTHON=1`. Different wheel bytes or incomplete licenses, SBOM or RECORD fail. Outputs contain only the wheels, generated installation-file inventory and build-only APK admission records.
 
-Helper usage (all directory arguments required; no implicit fetch/build):
+## Helper commands
+
+All directory arguments are required; fetching and building are explicit operations:
 
 ```text
 python runtime_installer.py help|--help|-h
@@ -23,15 +25,21 @@ python -I -B runtime_installer.py admit-apks ADMISSION_DIRECTORY
 python -I -B runtime_installer.py verify INSTALLED_FILES_JSON
 ```
 
-Help stops before any manifest read or file/network action. `fetch` requires a new directory, downloads only admitted HTTPS artifacts and copies the two checked text inputs; it never resolves dependencies. `admit-apks` reads the two full APK databases and Git version from the required admission directory, enforces the pinned manifest's exact base/additions and writes the complete checked diff. `build` requires the exact isolated CPython 3.11.17 musl arm64 tool environment and network disabled; OUTPUT must be new. `verify` requires an isolated `/usr/local` or `/opt/venv` interpreter with bytecode writes disabled (`-I -B`), a generated exact wheel-file inventory and the installed derivative. It rejects every `.pyc`/`.pyo` in the admitted pip tree, including sourceless modules and caches alongside unchanged source. There are no credential arguments or approval prompts. Each failing external operation has a bounded timeout and the CLI prints authored categories. The enclosing runner must enforce the accepted cgroup, wall-time, disk, network-ingress and output budgets.
+Help stops before any manifest read, file action or network call. `fetch` requires a new directory and downloads only admitted HTTPS artifacts; it never resolves dependencies. `admit-apks` reads complete APK databases and Git version, enforces the manifest's base/additions and records the checked diff. `build` requires the exact isolated CPython 3.11.17 musl arm64 tool environment, disabled networking and a new output directory.
 
-## Application integration contract
+`verify` requires an isolated `/usr/local` or `/opt/venv` interpreter with bytecode writes disabled (`-I -B`), the exact generated wheel-file inventory and the installed derivative. Every `.pyc`/`.pyo` in the admitted pip tree fails, including sourceless modules and caches beside unchanged source. External operations have bounded timeouts and authored error categories. The enclosing builder must enforce memory, CPU, wall-time, disk, network-ingress and output limits. No credential arguments or approval prompts are part of the helper.
 
-The main Dockerfile has not adopted this route yet. Its eventual integration must use this same public stage/helper and exact manifest, after `FROM base AS dependencies`, so no compiler recipe/bootstrap input is changed by runtime vendoring. Keep all source/hash/tool/SBOM/license checks mandatory. Do not copy the Git/tool stage's Python prefix or APK libraries into the runtime.
+## Application integration
 
-After the ordinary application dependencies have been installed and `/opt/venv` has been copied into runtime-files, install the exact derivative wheel into **both** `/usr/local` and `/opt/venv`. Use a BuildKit read-only mount from the admitted installer stage to avoid leaving wheel archives as extra scanner inputs. Both commands must use `python -I -B -m pip install --no-index --no-deps --no-compile`, use the exact mounted wheel and verify its whole-wheel hash immediately before installation. The normal pip upgrade removes its old RECORD-owned files/caches; do not erase unexpected files to make admission pass. Retain every source file, license, SBOM and metadata entry. Do not rerun the compiler's `tools()` verifier against the intentionally changed runtime pip; keep that verifier unchanged for the base/binding stages and call the separate runtime verifier in the final stage.
+The main Dockerfile includes the same public installer stage/helper and exact manifest. Build-only Git/tool Python prefixes and APK libraries are never copied into the runtime. Runtime vendoring does not change compiler/bootstrap inputs.
 
-Copy only `installed-files.json` to `/usr/share/open-webui-derivative/runtime-installer-files.json`. For each interpreter execute:
+After installing application dependencies, the recipe installs the exact derivative wheel into both `/usr/local` and `/opt/venv`. A read-only BuildKit stage mount supplies installation inputs without an extra staging copy in the runtime. Both installers use `python -I -B -m pip install --no-index --no-deps --no-compile` after a whole-wheel hash check. Normal pip replacement removes its own old RECORD-managed files; unexpected files must fail admission rather than be erased. Source, licenses, SBOM and metadata remain intact.
+
+The same runtime-only stage repairs the base standard library's ensurepip bootstrap payloads. It admits the exact original source and two complete bundled wheels, changes only the pip/setuptools version constants, and replaces those complete wheels with the same pip derivative and pinned setuptools84.2.1. Module hashes, wheel metadata, the complete outer RECORD (including nested vendor RECORD files) and licenses are verified. The standalone installer export includes this unchanged setuptools wheel. Compiler/bootstrap stages retain their original inputs.
+
+The final image also bootstraps a fresh disposable virtual environment through ensurepip with networking disabled. It checks actual package versions, every installed wheel source/metadata/license byte, repaired urllib3/msgpack and `pip check`. Ordinary ensurepip compilation may create caches inside the disposable environment; the fixture accounts for those separately and removes that environment afterward. Both original runtime prefixes and the strict ensurepip source/bundle inventories are checked again. ensurepip's ordinary behavior is retained.
+
+The compiler's `tools()` verifier applies before runtime pip replacement. The separate runtime verifier then checks both prefixes against `/usr/share/open-webui-derivative/runtime-installer-files.json`:
 
 ```sh
 /usr/local/bin/python -I -B /checks/runtime_installer.py verify /usr/share/open-webui-derivative/runtime-installer-files.json
@@ -42,19 +50,37 @@ Copy only `installed-files.json` to `/usr/share/open-webui-derivative/runtime-in
 /opt/venv/bin/python -I -B -m pip check
 ```
 
-The standard unittest discovery calls make `/checks` importable explicitly. Do not add `PYTHONPATH` or alter loader variables. `-I` ignores Python environment settings, so explicit `-B` is required for verifier/fixture/pip processes that touch the admitted subtree, including fixture children. The final Docker default target must also retain `test_native_check.py`, the complete native ELF/host proof, auth fixtures and offline app import. Run `test_dependency_runtime.py` with `-I -B` in the application interpreter for Pillow 13/MCP 1.30/application and vendored urllib3 behavior; rerun its vendored HTTP fixture in the other prefix. Recheck both installer inventories after the other final Python gates so any unexpected cache or shadow module fails. These new fixtures are source-prepared and have not yet executed against the repaired image.
+Unittest discovery makes `/checks` importable explicitly; no `PYTHONPATH` or loader-variable overrides are needed. `-I` ignores Python environment settings, so admitted-tree verifier/fixture/pip processes and fixture children also require `-B`.
 
-Formatter/static/type commands from the repository root are:
+The default final image requires native-validator boundary tests, complete installed ELF/linkage checks in their actual Python/Bash hosts, production authentication fixtures and offline application imports. `test_dependency_runtime.py` checks Pillow, MCP and application/vendored urllib3 behavior in the application interpreter; its vendored HTTP fixture also runs in the other prefix. Both installer inventories are checked again afterward, rejecting caches and shadow modules introduced by any other check.
+
+## Authored-code quality checks
+
+The main Dockerfile's `quality` target installs `bootstrap.lock` and `quality-tools.lock` into `/opt/quality`. Its separate application interpreter uses the actual complete musl dependency graph plus the maintained matching stubs in `quality-stubs.lock`. The default runtime target copies only the quality marker from that stage and the original application prefix from `dependencies`; quality tools and stubs never enter the shipped runtime.
+
+Run the reproducible check target from the repository root:
 
 ```sh
-ruff format --check --config docker/open-webui/ruff.toml docker/open-webui
-ruff check --config docker/open-webui/ruff.toml docker/open-webui
-python -m mypy --config-file docker/open-webui/mypy.ini
-python -m mypy --config-file docker/open-webui/mypy.ini docker/open-webui/check.py docker/open-webui/native_check.py
+docker buildx build --platform linux/arm64 --target quality \
+  -f docker/open-webui/Dockerfile .
 ```
 
-Use `quality-tools.lock` in an isolated CPython 3.11 musl arm64 tool environment. It pins upstream incumbent Ruff 0.15.5 and the proposed mypy 2.4 closure; installation and diagnostics remain pending. The mypy configuration is strict for the new installer and its standard-library fixtures. Existing application/native checker annotation debt and third-party fixture interfaces still require a separately reviewed check scope; a scoped pass must not be reported as full typing coverage. The upstream configured Ruff profile applies to all authored Python without broad ignores. CI must call these same gates, and final build tests must execute rather than merely ship.
+The target executes these commands from `/workspace`, where the canonical sources are available at `docker/open-webui`:
 
-## Scan caller boundary
+```sh
+/opt/quality/bin/ruff format --check --no-cache --config docker/open-webui/ruff.toml docker/open-webui
+/opt/quality/bin/ruff check --no-cache --config docker/open-webui/ruff.toml docker/open-webui
+/opt/quality/bin/python -I -B -m mypy --config-file docker/open-webui/mypy.ini
+/opt/quality/bin/python -I -B -m mypy --config-file docker/open-webui/mypy.ini \
+  --python-executable /opt/venv/bin/python docker/open-webui/check.py docker/open-webui/native_check.py
+```
 
-Raw all-severity vulnerability and secret reports remain mandatory and unchanged. This helper does not classify/ignore advisories or emit VEX. The new pip wheel's SBOM still names setuptools 70.3.0 truthfully; any narrow false-positive admission must separately bind a candidate's actual archive/config/rootfs, both Python prefixes, exact wheel-derived file inventory, all metadata occurrences, retained subset and absence of vulnerable modules. A new package, shadow distribution, module, version or hash must fail admission. Native scanner VEX behavior and normal scan/CI integration need their own reviewed execution proof before any caller contract can be adopted. Real findings, including the application Pillow/MCP changes and pip's real urllib3/msgpack repair, remain blocking until the new checked candidate and fresh scan pass.
+Ruff uses the pinned upstream profile for all authored Python. Mypy is strict for the installer and its standard-library fixtures; existing checker bodies use the separate configured profile and actual target-package typing context. A scoped typing check does not establish full strict coverage or runtime/security compatibility. Both quality and runtime fixtures execute as required dependencies of the default image build, including CI's ordinary `docker compose build openwebui`.
+
+## Dependency and scanner boundaries
+
+The derivative changes five upstream application pins: cryptography 50.0.2, PyJWT 2.15.1, aiohttp 3.14.4, MCP 1.30.0 and Pillow 13.0.0. `requirements-musl.lock` and `dependency-musl-lock.json` bind the complete target graph and wheel hashes to those inputs. `history/four-pin-basis/` preserves the original source, patch and resolved graph as technical provenance.
+
+The RE2 artifact requires independent matching builds and complete source/toolchain provenance. Compilation inputs are bound separately from later runtime-only checks; historical whole-recipe hashes remain unchanged. Dependency locking and native artifact reproducibility do not establish application behavior or image security.
+
+Raw all-severity vulnerability and secret reports remain required. This helper neither ignores advisories nor emits VEX. Its SBOM truthfully retains setuptools 70.3.0 metadata. Any narrow false-positive classification must bind the actual archive/config/rootfs, both Python prefixes, exact wheel-derived inventory, every metadata occurrence, retained subset and absence of vulnerable modules. New packages, shadow distributions, modules, versions or hashes fail admission. Genuine findings block adoption until repaired and checked in the actual final image.

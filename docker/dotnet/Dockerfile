@@ -7,6 +7,18 @@ RUN dotnet restore "services/${PROJECT}/${PROJECT}.csproj" --locked-mode \
     && dotnet publish "services/${PROJECT}/${PROJECT}.csproj" --no-restore -c Release -o /out
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.13@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac
+# Ubuntu USN-8954-1; retain the fixed vendor package from one immutable archive snapshot.
+RUN mkdir /tmp/zlib-empty-sources \
+    && printf '%s\n' 'Types: deb' \
+      'URIs: https://snapshot.ubuntu.com/ubuntu/20261023T000000Z/' \
+      'Suites: noble-security' 'Components: main' \
+      'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' > /tmp/zlib.sources \
+    && apt-get -o Dir::Etc::sourcelist=/tmp/zlib.sources -o Dir::Etc::sourceparts=/tmp/zlib-empty-sources update \
+    && apt-get -o Dir::Etc::sourcelist=/tmp/zlib.sources -o Dir::Etc::sourceparts=/tmp/zlib-empty-sources \
+      install -y --no-install-recommends --only-upgrade zlib1g=1:1.3.dfsg-3.1ubuntu2.3 \
+    && test "$(dpkg-query -W -f='${Version}' zlib1g)" = '1:1.3.dfsg-3.1ubuntu2.3' \
+    && rm -rf /var/lib/apt/lists/* /tmp/zlib.sources /tmp/zlib-empty-sources
+
 ARG PROJECT
 WORKDIR /app
 COPY --from=build /out/ .

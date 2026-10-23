@@ -75,37 +75,53 @@
   "patchedDirectDependencies": {
     "PyJWT": "2.15.1",
     "cryptography": "50.0.2",
-    "mcp": "1.28.1",
-    "aiohttp": "3.14.4"
+    "mcp": "1.30.0",
+    "aiohttp": "3.14.4",
+    "pillow": "13.0.0"
   },
-  "patchSha256": "64392094a9ee984a852abf05ef73885ccb4bbb72e59f36b074b91e3756e24cc9",
-  "requirementsInputSha256": "9457bd63f60aa0334a6ab59f0755aa3d891c521bfc54ec1270ae3feec5c580ee",
+  "patchSha256": "fb768ad971ddaef7d23c9cdf58807bfcd0a9f69bbaac31eb057d8a2c49d94c5d",
+  "requirementsInputSha256": "bd191e62aa09a98a1f4a44c133860e736f3cc251d7577dad8ece7f49ea9e2bfa",
   "resolution": {
     "status": "resolved-reviewed-musl-arm64-python311",
     "file": "requirements-musl.lock",
     "manifest": "dependency-musl-lock.json",
-    "sha256": "1e64b64b61bd52a8b7936a48930c563a5734735055544530b6e40586f5768d46",
-    "manifestSha256": "1bfabbb051894cf355de7baffedc6cc1a80e769cf2443a469394657795961834",
-    "scope": "Native Linux/aarch64 musl, CPython3.11.17 wheel lock; exact versions, extras, artifact hashes, Python/tag metadata, recipe and frozen toolchain must match."
+    "sha256": "d70c662a55010f34fdb67a9af90b20c2f8b580968f939bd0240860e9383ef060",
+    "manifestSha256": "756664c353e5b9a915a14735c64a7a9bf56a3fcfd523aedf624ab4674259803b",
+    "scope": "Exact hash-pinned CPython 3.11 musl arm64 dependency graph. Installation, native ABI, authentication/import and final-image security are separate enforced boundaries."
   },
-  "sourceChanges": "Only four dependency pins; no auth/app/static source edits",
+  "sourceChanges": "Five dependency pins: cryptography, PyJWT, aiohttp, mcp and pillow; runtime-only pip vendor and ensurepip bundle repair; no auth/app/static source edits",
   "scope": "official slim boundary; no bundled model/local ML/document/audio runtime",
   "runtime": "Upstream start.sh runs from /app/backend; persistent SQLite/application key state uses /app/backend/data.",
   "checks": "Build checks enforce pinned upstream source and dependency graph integrity, release asset/auth/start bytes, pip consistency, focused production authentication functions and offline application imports using disposable synthetic data. Dependency locking does not establish application runtime compatibility or image security. Native musl ABI and both installer prefixes are checked; a locally built RE2 wheel requires independent matching build hashes and toolchain provenance.",
   "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
   "nativeWheel": {
-    "filename": "google_re2-1.1.20251105-cp311-cp311-linux_aarch64.whl",
-    "sha256": "21c25083f34e0a32008ebd7df33f486e4ffa797e3e89ed5c87d8267535b7c101",
-    "toolchainInventorySha256": "f81df47ecfc8f05cbad9074a095261046c8c759dff755f348631367f8eeda27e",
-    "recipeSha256": "1b06f1bf15bdbf0e1399b3df4e89e85ddb7dc0c5ae0c7f8a789fdbadc6df5765",
-    "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
-    "sourceDateEpoch": 1762353507,
     "buildInputs": {
-      "recipePrefixSha256": "9df331fe1da73555460247864a074eddb389a6f0cae9daf71cc694510532dba0",
-      "checkerBuildAstSha256": "d9d59c0e45a17cd9ccb5b7b91e315d98bff618472c536190099735d5c6aabf12",
-      "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
       "bootstrapSha256": "96051f6f3340c6d936196c2a320ee585db9dd4eff381f560b36b5adb1c825d57",
-      "buildToolsSha256": "572558c3e80ff3bf1f8cbdc4f16c7bb7e0372cbd43cd8f57736c898069f3f06d"
+      "buildToolsSha256": "572558c3e80ff3bf1f8cbdc4f16c7bb7e0372cbd43cd8f57736c898069f3f06d",
+      "checkerBuildAstSha256": "b4a7b25cb2f7ce3877b9b346fbc501a2c1bf83ca12cc104355d9cef48c4c8f5d",
+      "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
+      "recipePrefixSha256": "9df331fe1da73555460247864a074eddb389a6f0cae9daf71cc694510532dba0"
+    },
+    "filename": "google_re2-1.1.20251105-cp311-cp311-linux_aarch64.whl",
+    "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
+    "recipeSha256": "c7c767cdc810e0009574b7461752b6507bf1fb8c9235d4660513fe81c1a5fa9a",
+    "sha256": "21c25083f34e0a32008ebd7df33f486e4ffa797e3e89ed5c87d8267535b7c101",
+    "sourceDateEpoch": 1762353507,
+    "status": "reproduced-reviewed-two-independent-builds",
+    "toolchainInventorySha256": "f81df47ecfc8f05cbad9074a095261046c8c759dff755f348631367f8eeda27e",
+    "independentBuilds": 2
+  },
+  "historicalBasis": {
+    "sourceLock": "history/four-pin-basis/source-lock.json",
+    "sourceLockSha256": "99edf66f5a63dfa5a6cb150d5e7e6956a0bc909dcb2bc0e0f066c46b4d94170f",
+    "requirementsInput": "history/four-pin-basis/requirements-slim.in",
+    "requirementsInputSha256": "9457bd63f60aa0334a6ab59f0755aa3d891c521bfc54ec1270ae3feec5c580ee",
+    "patch": "history/four-pin-basis/security-dependencies.patch",
+    "patchSha256": "64392094a9ee984a852abf05ef73885ccb4bbb72e59f36b074b91e3756e24cc9",
+    "scope": "Unchanged prior resolved graph and native proof; historical source lock retains original statuses, wheel/toolchain/recipe hashes. These records do not admit the candidate inputs.",
+    "resolvedFiles": {
+      "requirements-musl.lock": "1e64b64b61bd52a8b7936a48930c563a5734735055544530b6e40586f5768d46",
+      "dependency-musl-lock.json": "1bfabbb051894cf355de7baffedc6cc1a80e769cf2443a469394657795961834"
     }
   }
 }

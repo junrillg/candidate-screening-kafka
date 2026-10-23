@@ -3,12 +3,14 @@
 import argparse
 import base64
 import csv
+import email.parser
 import hashlib
 import importlib.metadata
 import io
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -19,6 +21,7 @@ from typing import NoReturn
 
 HERE = Path(__file__).resolve().parent
 VERSION = '26.2.2+local.openwebui.1'
+ENSUREPIP = Path('/usr/local/lib/python3.11/ensurepip')
 MAX_ARTIFACT = 16 * 1024 * 1024
 
 
@@ -203,7 +206,7 @@ def wheel_files(path: Path) -> dict[str, bytes]:
         )
         require(sum(row.file_size for row in wheel.infolist()) < 32 * 1024 * 1024, 'wheel_expansion_bound')
         files = {name: wheel.read(name) for name in names if not name.endswith('/')}
-    records = [name for name in files if name.endswith('.dist-info/RECORD')]
+    records = [name for name in files if name.endswith('.dist-info/RECORD') and '/' not in name.split('.dist-info/')[0]]
     require(len(records) == 1, 'wheel_record_count')
     record = records[0]
     inventory = list(csv.reader(io.StringIO(files[record].decode())))
@@ -320,6 +323,10 @@ def build(inputs: Path, output: Path, manifest: dict[str, object]) -> None:
     shutil.copytree(inputs / 'vendor', work / 'vendor')
     shutil.copyfile(output / string(msgpack['filename']), work / 'vendor' / string(msgpack['filename']))
     build_pip(inputs, output, work, env, manifest)
+    setuptools = rows(manifest, 'tools')['setuptools']
+    wheel = inputs / 'tools' / string(setuptools['filename'])
+    validate_bootstrap_wheel(wheel, 'setuptools', setuptools, manifest)
+    shutil.copyfile(wheel, output / wheel.name)
     shutil.rmtree(work)
 
 
@@ -349,12 +356,10 @@ def build_pip(inputs: Path, output: Path, work: Path, env: dict[str, str], manif
     save(project / 'src/pip/_vendor/runtime-derivative.json', provenance)
     with (project / 'src/pip/_vendor/README.rst').open('a') as stream:
         stream.write(
-            (
-                '\n'
-                'Local runtime security derivative: upstream urllib3 2.8.0 and msgpack 1.2.1; '
-                'unchanged upstream vendoring patches, retained licenses and complete regenerated '
-                'SBOM. Exact source/artifact provenance is in runtime-derivative.json.\n'
-            )
+            '\n'
+            'Local runtime security derivative: upstream urllib3 2.8.0 and msgpack 1.2.1; '
+            'unchanged upstream vendoring patches, retained licenses and complete regenerated '
+            'SBOM. Exact source/artifact provenance is in runtime-derivative.json.\n'
         )
     command(
         [
@@ -385,6 +390,97 @@ def pip_tree(root: Path) -> dict[str, Path]:
     require(not any(path.is_symlink() for path in paths), 'runtime_pip_symlink')
     require(not any(path.suffix in {'.pyc', '.pyo'} for path in paths), 'runtime_pip_bytecode')
     return {str(path.relative_to(root)): path for path in paths if path.is_file()}
+
+
+def validate_bootstrap_wheel(path: Path, name: str, row: dict[str, object], manifest: dict[str, object]) -> None:
+    checked_artifact(path, row)
+    require(path.stat().st_nlink == 1, 'bootstrap_wheel_hardlink')
+    files = wheel_files(path)
+    version = VERSION if name == 'pip' else '84.2.1'
+    metadata = [
+        value
+        for key, value in files.items()
+        if key.endswith('.dist-info/METADATA') and '/' not in key.split('.dist-info/')[0]
+    ]
+    require(len(metadata) == 1, 'bootstrap_wheel_metadata_count')
+    parsed = email.parser.BytesParser().parsebytes(metadata[0])
+    require(parsed['Name'] == name and parsed['Version'] == version, 'bootstrap_wheel_metadata')
+    if name == 'pip':
+        validate_pip_files(files, manifest)
+    else:
+        require(row['version'] == version, 'bootstrap_setuptools_version')
+        for license_path, digest in mapping(row['licenseFiles']).items():
+            require(
+                license_path in files and hashlib.sha256(files[license_path]).hexdigest() == string(digest),
+                'bootstrap_license_changed',
+            )
+
+
+def ensurepip_inventory(manifest: dict[str, object], *, repaired: bool) -> dict[str, str]:
+    spec = mapping(manifest['ensurepip'])
+    require(ENSUREPIP.is_dir() and not ENSUREPIP.is_symlink(), 'ensurepip_directory')
+    paths = list(ENSUREPIP.rglob('*'))
+    require(not any(path.is_symlink() for path in paths), 'ensurepip_symlink')
+    require(
+        all(stat.S_ISREG(path.lstat().st_mode) or stat.S_ISDIR(path.lstat().st_mode) for path in paths),
+        'ensurepip_special_file',
+    )
+    require(
+        spec['directories'] == ['_bundled', '__pycache__']
+        and {str(path.relative_to(ENSUREPIP)) for path in paths if path.is_dir()} == {'_bundled', '__pycache__'},
+        'ensurepip_directories',
+    )
+    wheels = (
+        {'pip': mapping(mapping(manifest['outputs'])['pip']), 'setuptools': rows(manifest, 'tools')['setuptools']}
+        if repaired
+        else rows(spec, 'originalWheels')
+    )
+    expected = {name: string(digest) for name, digest in mapping(spec['moduleSha256']).items()}
+    expected['__init__.py'] = string(spec['repairedSourceSha256' if repaired else 'originalSourceSha256'])
+    expected.update({'_bundled/' + string(row['filename']): string(row['sha256']) for row in wheels.values()})
+    actual = {str(path.relative_to(ENSUREPIP)): path for path in paths if path.is_file()}
+    require(set(actual) == set(expected), 'ensurepip_file_inventory')
+    require(
+        all(path.stat().st_nlink == 1 and sha(path) == expected[name] for name, path in actual.items()),
+        'ensurepip_file_changed',
+    )
+    source = actual['__init__.py'].read_text()
+    versions = {'pip': VERSION, 'setuptools': '84.2.1'} if repaired else {'pip': '24.0', 'setuptools': '79.0.1'}
+    require(
+        all(
+            source.count('_' + name.upper() + '_VERSION = "' + version + '"') == 1 for name, version in versions.items()
+        ),
+        'ensurepip_version_constants',
+    )
+    return expected
+
+
+def repair_ensurepip(wheels: Path, manifest: dict[str, object]) -> None:
+    """Replace only the exact base runtime's two obsolete complete bootstrap wheels."""
+    ensurepip_inventory(manifest, repaired=False)
+    replacements = {
+        'pip': mapping(mapping(manifest['outputs'])['pip']),
+        'setuptools': rows(manifest, 'tools')['setuptools'],
+    }
+    for name, row in replacements.items():
+        validate_bootstrap_wheel(wheels / string(row['filename']), name, row, manifest)
+    source = ENSUREPIP / '__init__.py'
+    updated = (
+        source.read_text()
+        .replace('_PIP_VERSION = "24.0"', '_PIP_VERSION = "' + VERSION + '"')
+        .replace('_SETUPTOOLS_VERSION = "79.0.1"', '_SETUPTOOLS_VERSION = "84.2.1"')
+    )
+    spec = mapping(manifest['ensurepip'])
+    require(
+        hashlib.sha256(updated.encode()).hexdigest() == string(spec['repairedSourceSha256']),
+        'ensurepip_repaired_source',
+    )
+    for row in rows(spec, 'originalWheels').values():
+        (ENSUREPIP / '_bundled' / string(row['filename'])).unlink()
+    for row in replacements.values():
+        shutil.copyfile(wheels / string(row['filename']), ENSUREPIP / '_bundled' / string(row['filename']))
+    source.write_text(updated)
+    ensurepip_inventory(manifest, repaired=True)
 
 
 def verify(inventory: Path, manifest: dict[str, object]) -> dict[str, object]:
@@ -421,11 +517,13 @@ def verify(inventory: Path, manifest: dict[str, object]) -> dict[str, object]:
         if name.startswith('pip/'):
             files[name] = path.read_bytes()
     validate_pip_files(files, manifest)
+    bootstrap = ensurepip_inventory(manifest, repaired=True)
     return {
         'prefix': sys.prefix,
         'pipVersion': VERSION,
         'wheelSha256': frozen['wheelSha256'],
         'fileInventorySha256': json_hash(hashes),
+        'ensurepipFileSha256': bootstrap,
         'packages': {
             d.metadata['Name'].lower().replace('_', '-'): d.version for d in importlib.metadata.distributions()
         },
@@ -441,7 +539,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__,
         epilog='Build requires the pinned isolated /opt/tools environment and network disabled; '
-               'verify runs once in each runtime interpreter.',
+        'verify runs once in each runtime interpreter.',
     )
     sub = parser.add_subparsers(dest='mode', required=True)
     sub.add_parser('fetch', help='fetch exact public source/artifact hashes, without resolving').add_argument(
@@ -456,6 +554,9 @@ def main() -> None:
     sub.add_parser('verify', help='verify current runtime prefix against the exact built wheel').add_argument(
         'inventory', type=Path
     )
+    sub.add_parser('repair-ensurepip', help='repair the two exact runtime-only bootstrap wheels').add_argument(
+        'wheels', type=Path
+    )
     arguments = sys.argv[1:]
     if arguments and arguments[0].lower() in {'help', '--help', '-h'}:
         parser.print_help()
@@ -469,6 +570,8 @@ def main() -> None:
             admit_apks(args.directory.resolve(), manifest)
         elif args.mode == 'build':
             build(args.inputs.resolve(), args.output.resolve(), manifest)
+        elif args.mode == 'repair-ensurepip':
+            repair_ensurepip(args.wheels.resolve(), manifest)
         else:
             print(json.dumps(verify(args.inventory, manifest), sort_keys=True))
     except InstallerFailure as error:

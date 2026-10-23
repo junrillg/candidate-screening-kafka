@@ -44,29 +44,17 @@
       "activation_api": "jakarta.activation:jakarta.activation-api:2.1.4",
       "activation_implementation": "org.eclipse.angus:angus-activation:2.0.3"
     },
-    "runtime_resources": "Canonical Gradle init binds required providers to component/artifact hashes, rejects differing class providers, merges supported metadata, retains attributable original notices/version metadata and fails duplicate JAR paths.",
+    "runtime_resources": "Canonical Gradle init binds required providers to component/artifact hashes, rejects differing functional class providers, asserts inherited Shadow module-descriptor exclusions, merges supported metadata, retains original descriptors/notices/version metadata by artifact hash and fails duplicate JAR paths.",
     "viewer_runtime": {
       "image": "eclipse-temurin:25-jre-noble",
       "index_sha256": "3f2223fe04b750aa5a8179e29b5c9a1ddf7665fc9bb08bfe11ad01d143bc13a5",
       "linux_arm64_manifest_sha256": "3db890c12a9e41d8a82c87c46287aaf7c1984573baf807db342f7e4e0928b46a",
       "java_version": "25.0.4.1+1",
       "reason": "Selected Linux ARM epoll/JNI requires GLIBC_2.17 and libc.so.6; signed Ubuntu APT updates; no compatibility shim. Exact-runtime no-network packaged probe gates the runtime target.",
-      "auth_helper": "Independent accepted Alpine helper stage unchanged."
-    }
+      "auth_helper": "Independent Alpine auth-helper stage."
+    },
+    "input_security": "Literal multi-message separators and Java-identifier class-name extraction; fixes three actual CodeQL warnings without suppressions.",
+    "jline": "3.30.15"
   },
-  "verification": "Source derivative. Build enforces locked frontend install, configured JS/JSX lint, formatting, tests, production bundling and dependency checks; focused Java auth/Kafka compatibility cases and a fixed no-network packaged-data/provider probe. Hosted CodeQL, final image scan and readonly live fixtures are separate acceptance gates; no publisher signature or universal production readiness claimed.",
-  "verification_status": {
-    "current_source_batch": "Source-only compatibility/provider/native-runtime correction; exact archive/three-patch replay and selected-source hashes checked. This batch has not been compiled, tested or built.",
-    "retained_prior_evidence": "Earlier frontend and separate auth-helper checks passed; earlier Java compile/four auth tests passed, but its JAR failed broader duplicate-entry/archive acceptance. Those results do not verify this corrected batch.",
-    "pending": [
-      "Gradle configuration and transformer class loading",
-      "Java compile and all nine focused auth/Kafka tests",
-      "Converged dependency ownership and complete JAR uniqueness/CRC/overlap validation",
-      "Fixed packaged compatibility probe on both build JDK and exact selected Noble JRE without network",
-      "Hosted CodeQL analysis",
-      "Final viewer image all-severity vulnerability/secret scan",
-      "Authenticated readonly viewer integration fixtures"
-    ],
-    "deployment": "Learning source draft only; viewer image adoption and product deployment have not occurred."
-  }
+  "verification": "Source derivative. Build enforces locked frontend install, configured JS/JSX lint, formatting, tests, production bundling and dependency checks; focused Java auth/Kafka compatibility cases and a fixed no-network packaged-data/provider probe. Hosted CodeQL, final image scan and readonly live fixtures are separate acceptance gates; no publisher signature or universal production readiness claimed."
 }

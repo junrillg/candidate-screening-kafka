@@ -37,10 +37,10 @@ def urllib3_cases(name: str) -> None:
     assert module.__version__ == '2.8.0'
     prefix = b'HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n'
     oversized = prefix + b'\r\n' + b'1' * 65537 + b'\r\n'
-    original = http.client.HTTPResponse(BytesSocket(oversized))
+    original = http.client.HTTPResponse(BytesSocket(oversized), method='GET')
     original.begin()
     response = response_module.HTTPResponse(
-        body=original, headers=original.headers, original_response=original, preload_content=False
+        body=original, headers=original.headers.items(), original_response=original, preload_content=False
     )
     try:
         list(response.read_chunked(amt=31))
@@ -57,10 +57,10 @@ def urllib3_cases(name: str) -> None:
         + compressed
         + b'\r\n0\r\n\r\n'
     )
-    original = http.client.HTTPResponse(BytesSocket(raw))
+    original = http.client.HTTPResponse(BytesSocket(raw), method='GET')
     original.begin()
     response = response_module.HTTPResponse(
-        body=original, headers=original.headers, original_response=original, preload_content=False
+        body=original, headers=original.headers.items(), original_response=original, preload_content=False
     )
     try:
         assert b''.join(response.read_chunked(amt=31, decode_content=True)) == expected

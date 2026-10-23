@@ -155,7 +155,8 @@ services:
     cpus: 0.5
     env_file: [.secrets/akhq.env]
     read_only: true
-    tmpfs: ["/tmp:uid=10001,gid=10001,mode=0700"]
+    # The JVM loads extracted JNI libraries from this private temporary mount.
+    tmpfs: ["/tmp:exec,nosuid,nodev,size=128m,uid=10001,gid=10001,mode=0700"]
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     ports: [127.0.0.1:8096:8080]

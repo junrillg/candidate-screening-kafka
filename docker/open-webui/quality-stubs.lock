@@ -1,0 +1,3 @@
+# Quality-only typeshed stubs matching psycopg2 2.9.12 and pytz 2026.2; never a runtime/compiler lock.
+types-psycopg2==2.9.21.20260724 --hash=sha256:4f87890dd06cea99e3bb0536330ffc2a7320e69059dc1ee0e2c884ef2718f2b4
+types-pytz==2026.2.0.20260518 --hash=sha256:3a12eaa38f476bd650902a9c9bb442f03f3c7dee2be5c5848bce61bd708d205a

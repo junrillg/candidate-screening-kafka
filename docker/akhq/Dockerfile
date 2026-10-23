@@ -59,7 +59,8 @@ RUN ./gradlew --no-daemon --no-parallel --max-workers=1 --warning-mode all --sta
       --init-script /build/frontend-ci.init.gradle \
       -x :client:installFrontend -x :client:assembleFrontend \
       test --tests org.akhq.configs.security.BasicAuthTest \
-      --tests org.akhq.compatibility.KafkaCompatibilityTest -x startTestKafkaCluster \
+      --tests org.akhq.compatibility.KafkaCompatibilityTest \
+      --tests org.akhq.compatibility.InputParsingSecurityTest -x startTestKafkaCluster \
     && ./gradlew --no-daemon --no-parallel --max-workers=1 --warning-mode all --stacktrace \
       --init-script /build/frontend-ci.init.gradle \
       -x :client:installFrontend -x :client:assembleFrontend shadowJar \
@@ -102,7 +103,7 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Check the exact selected JRE and updated runtime filesystem; do not ship the probe.
 FROM runtime-base AS runtime-checks
-COPY --from=build --chmod=0444 /build/source/build/classes/java/test/org/akhq/compatibility/DerivativeRuntimeProbe*.class /verify/org/akhq/compatibility/
+COPY --from=build --chmod=u=rX,go=rX /build/source/build/classes/java/test/org/akhq/compatibility/DerivativeRuntimeProbe*.class /verify/org/akhq/compatibility/
 RUN --network=none java -Xms16m -Xmx128m -XX:MaxMetaspaceSize=96m \
       -XX:ReservedCodeCacheSize=32m -XX:-UsePerfData \
       -cp /app/akhq.jar:/verify org.akhq.compatibility.DerivativeRuntimeProbe \

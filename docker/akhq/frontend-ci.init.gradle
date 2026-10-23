@@ -53,6 +53,10 @@ gradle.projectsEvaluated {
             path == 'META-INF/versions/11/OSGI-INF/MANIFEST.MF') return 'bc-fips-2.1.2.jar'
         null
     }
+    def moduleDescriptor = { String path ->
+        path == 'module-info.class' ||
+            (path.startsWith('META-INF/versions/') && path.endsWith('/module-info.class'))
+    }
     jarTask.configure { task ->
         // All different class providers must first converge in the dependency graph.
         // A byte comparison below rejects a future differing class before this first-wins policy.
@@ -72,6 +76,10 @@ gradle.projectsEvaluated {
             'com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer'))
         from(extra)
         doFirst {
+            // Shadow excludes these descriptors for a fat JAR; they are metadata, not class providers.
+            if (!task.excludes.containsAll(['module-info.class', 'META-INF/versions/**/module-info.class'])) {
+                throw new GradleException('Required inherited module descriptor exclusions changed.')
+            }
             def directory = extra.get().asFile
             app.delete(directory)
             directory.mkdirs()
@@ -99,7 +107,7 @@ gradle.projectsEvaluated {
                         if (entry.name.startsWith('/') || entry.name.split('/').contains('..')) {
                             throw new GradleException('Unsafe dependency resource path.')
                         }
-                        if (entry.name.endsWith('.class')) {
+                        if (entry.name.endsWith('.class') && !moduleDescriptor(entry.name)) {
                             def digest = zip.getInputStream(entry).withCloseable { hashStream(it) }
                             if (classHashes.containsKey(entry.name) && classHashes[entry.name] != digest) {
                                 throw new GradleException('Differing runtime class providers: ' + entry.name)
@@ -111,10 +119,11 @@ gradle.projectsEvaluated {
                         }
                         // Retain original legal notices AND bundled version/POM evidence by artifact hash.
                         // This keeps every input attributable; it never deletes metadata to lower a scan count.
-                        if (!entry.name.endsWith('.class') && ((entry.name ==~ /(?i).*(license|notice|copyright|dependencies).*/) ||
+                        if (moduleDescriptor(entry.name) || (!entry.name.endsWith('.class') &&
+                            ((entry.name ==~ /(?i).*(license|notice|copyright|dependencies).*/) ||
                             (entry.name.startsWith('META-INF/') && !entry.name.startsWith('META-INF/native/') &&
                              !entry.name.startsWith('META-INF/services/')) || entry.name.startsWith('google/protobuf/') ||
-                            ['mime.types', 'version.properties', 'VersionInfo.java'].contains(entry.name))) {
+                            ['mime.types', 'version.properties', 'VersionInfo.java'].contains(entry.name)))) {
                             def target = new File(directory, 'META-INF/third-party/' + fileHash + '/' + entry.name)
                             target.parentFile.mkdirs()
                             target.withOutputStream { output -> zip.getInputStream(entry).withCloseable { output << it } }

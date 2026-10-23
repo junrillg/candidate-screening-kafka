@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
-  "inputSha256": "9457bd63f60aa0334a6ab59f0755aa3d891c521bfc54ec1270ae3feec5c580ee",
-  "requirementsSha256": "1e64b64b61bd52a8b7936a48930c563a5734735055544530b6e40586f5768d46",
+  "status": "resolved-reviewed-musl-arm64-python311",
+  "inputSha256": "bd191e62aa09a98a1f4a44c133860e736f3cc251d7577dad8ece7f49ea9e2bfa",
+  "requirementsSha256": "d70c662a55010f34fdb67a9af90b20c2f8b580968f939bd0240860e9383ef060",
   "target": {
     "os": "linux",
     "architecture": "aarch64",
@@ -11,6 +12,7 @@
   "pythonVersion": "3.11.17",
   "resolver": "pip",
   "resolverVersion": "26.2.2",
+  "resolverMode": "offline hash-admitted wheelhouse; publisher provenance URLs retained separately",
   "packages": {
     "aiocache": "0.12.3",
     "aiodns": "3.6.1",
@@ -88,7 +90,7 @@
     "markdown": "3.10.2",
     "markdown-it-py": "4.2.0",
     "markupsafe": "3.0.4",
-    "mcp": "1.28.1",
+    "mcp": "1.30.0",
     "mdurl": "0.1.2",
     "msal": "1.39.0",
     "msal-extensions": "1.3.1",
@@ -119,7 +121,7 @@
     "packaging": "26.3",
     "pathspec": "1.1.1",
     "pgvector": "0.4.2",
-    "pillow": "12.3.0",
+    "pillow": "13.0.0",
     "platformdirs": "4.13.5",
     "propcache": "0.5.4",
     "protobuf": "6.33.6",
@@ -337,7 +339,7 @@
       "extras": []
     },
     "mcp": {
-      "version": "1.28.1",
+      "version": "1.30.0",
       "extras": []
     },
     "numpy": {
@@ -405,7 +407,7 @@
       "extras": []
     },
     "pillow": {
-      "version": "12.3.0",
+      "version": "13.0.0",
       "extras": []
     },
     "psutil": {
@@ -538,7 +540,8 @@
         "memcached",
         "msgpack",
         "redis"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiocache-0.12.3-py2.py3-none-any.whl"
     },
     "aiodns": {
       "name": "aiodns",
@@ -552,7 +555,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiodns-3.6.1-py3-none-any.whl"
     },
     "aiofiles": {
       "name": "aiofiles",
@@ -564,7 +568,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiofiles-25.1.0-py3-none-any.whl"
     },
     "aiohappyeyeballs": {
       "name": "aiohappyeyeballs",
@@ -576,7 +581,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiohappyeyeballs-2.7.1-py3-none-any.whl"
     },
     "aiohttp": {
       "name": "aiohttp",
@@ -604,7 +610,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "speedups"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiohttp-3.14.4-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "aiosignal": {
       "name": "aiosignal",
@@ -619,7 +626,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiosignal-1.4.0-py3-none-any.whl"
     },
     "aiosqlite": {
       "name": "aiosqlite",
@@ -647,7 +655,8 @@
       "providedExtras": [
         "dev",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/aiosqlite-0.22.1-py3-none-any.whl"
     },
     "alembic": {
       "name": "alembic",
@@ -667,7 +676,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "tz"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/alembic-1.18.4-py3-none-any.whl"
     },
     "annotated-doc": {
       "name": "annotated-doc",
@@ -679,7 +689,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/annotated_doc-0.0.5-py3-none-any.whl"
     },
     "annotated-types": {
       "name": "annotated-types",
@@ -691,7 +702,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/annotated_types-0.8.0-py3-none-any.whl"
     },
     "anyio": {
       "name": "anyio",
@@ -710,7 +722,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "trio"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/anyio-4.15.1-py3-none-any.whl"
     },
     "argon2-cffi": {
       "name": "argon2-cffi",
@@ -724,7 +737,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/argon2_cffi-25.1.0-py3-none-any.whl"
     },
     "argon2-cffi-bindings": {
       "name": "argon2-cffi-bindings",
@@ -739,7 +753,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/argon2_cffi_bindings-26.1.0-cp310-abi3-musllinux_1_2_aarch64.whl"
     },
     "asgiref": {
       "name": "asgiref",
@@ -758,7 +773,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "tests"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/asgiref-3.11.1-py3-none-any.whl"
     },
     "attrs": {
       "name": "attrs",
@@ -770,7 +786,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/attrs-26.1.0-py3-none-any.whl"
     },
     "authlib": {
       "name": "Authlib",
@@ -785,7 +802,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/authlib-1.7.2-py2.py3-none-any.whl"
     },
     "azure-ai-documentintelligence": {
       "name": "azure-ai-documentintelligence",
@@ -801,7 +819,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/azure_ai_documentintelligence-1.0.2-py3-none-any.whl"
     },
     "azure-core": {
       "name": "azure-core",
@@ -821,7 +840,8 @@
       "providedExtras": [
         "aio",
         "tracing"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/azure_core-1.41.0-py3-none-any.whl"
     },
     "azure-identity": {
       "name": "azure-identity",
@@ -839,7 +859,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/azure_identity-1.25.3-py3-none-any.whl"
     },
     "azure-search-documents": {
       "name": "azure-search-documents",
@@ -855,7 +876,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/azure_search_documents-12.0.0-py3-none-any.whl"
     },
     "bcrypt": {
       "name": "bcrypt",
@@ -873,7 +895,8 @@
       "providedExtras": [
         "tests",
         "typecheck"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/bcrypt-5.0.0-cp39-abi3-musllinux_1_2_aarch64.whl"
     },
     "beautifulsoup4": {
       "name": "beautifulsoup4",
@@ -899,7 +922,8 @@
         "charset-normalizer",
         "html5lib",
         "lxml"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/beautifulsoup4-4.14.3-py3-none-any.whl"
     },
     "bidict": {
       "name": "bidict",
@@ -913,7 +937,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/bidict-0.24.1-py3-none-any.whl"
     },
     "black": {
       "name": "black",
@@ -945,7 +970,8 @@
         "d",
         "jupyter",
         "uvloop"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/black-26.5.1-py3-none-any.whl"
     },
     "boto3": {
       "name": "boto3",
@@ -964,7 +990,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "crt"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/boto3-1.42.62-py3-none-any.whl"
     },
     "botocore": {
       "name": "botocore",
@@ -984,7 +1011,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "crt"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/botocore-1.42.97-py3-none-any.whl"
     },
     "brotli": {
       "name": "brotli",
@@ -996,7 +1024,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/brotli-1.2.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "certifi": {
       "name": "certifi",
@@ -1008,7 +1037,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/certifi-2026.10.19-py3-none-any.whl"
     },
     "cffi": {
       "name": "cffi",
@@ -1022,7 +1052,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/cffi-2.1.1-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "chardet": {
       "name": "chardet",
@@ -1034,7 +1065,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/chardet-7.4.3-py3-none-any.whl"
     },
     "charset-normalizer": {
       "name": "charset-normalizer",
@@ -1048,7 +1080,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "unicode-backport"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/charset_normalizer-3.5.2-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "click": {
       "name": "click",
@@ -1060,7 +1093,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/click-8.5.0-py3-none-any.whl"
     },
     "cryptography": {
       "name": "cryptography",
@@ -1078,7 +1112,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "ssh"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/cryptography-50.0.2-cp311-abi3-musllinux_1_2_aarch64.whl"
     },
     "defusedxml": {
       "name": "defusedxml",
@@ -1090,7 +1125,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/defusedxml-0.7.1-py2.py3-none-any.whl"
     },
     "distro": {
       "name": "distro",
@@ -1102,7 +1138,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/distro-1.9.0-py3-none-any.whl"
     },
     "fake-useragent": {
       "name": "fake-useragent",
@@ -1116,7 +1153,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/fake_useragent-2.2.0-py3-none-any.whl"
     },
     "fastapi": {
       "name": "fastapi",
@@ -1165,7 +1203,8 @@
         "standard",
         "standard-no-fastapi-cloud-cli",
         "all"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/fastapi-0.136.3-py3-none-any.whl"
     },
     "frozenlist": {
       "name": "frozenlist",
@@ -1177,7 +1216,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/frozenlist-1.8.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "ftfy": {
       "name": "ftfy",
@@ -1191,7 +1231,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/ftfy-6.3.1-py3-none-any.whl"
     },
     "google-re2": {
       "name": "google-re2",
@@ -1203,7 +1244,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/google_re2-1.1.20251105-cp311-cp311-linux_aarch64.whl"
     },
     "googleapis-common-protos": {
       "name": "googleapis-common-protos",
@@ -1220,7 +1262,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "grpc"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/googleapis_common_protos-1.75.0-py3-none-any.whl"
     },
     "greenlet": {
       "name": "greenlet",
@@ -1241,7 +1284,8 @@
       "providedExtras": [
         "docs",
         "test"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/greenlet-3.5.6-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "grpcio": {
       "name": "grpcio",
@@ -1258,7 +1302,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "protobuf"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/grpcio-1.84.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "h11": {
       "name": "h11",
@@ -1270,7 +1315,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/h11-0.16.0-py3-none-any.whl"
     },
     "h2": {
       "name": "h2",
@@ -1285,7 +1331,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/h2-4.4.1-py3-none-any.whl"
     },
     "hiredis": {
       "name": "hiredis",
@@ -1297,7 +1344,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/hiredis-3.4.2-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "hpack": {
       "name": "hpack",
@@ -1309,7 +1357,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/hpack-4.2.0-py3-none-any.whl"
     },
     "httpcore": {
       "name": "httpcore",
@@ -1333,7 +1382,8 @@
         "http2",
         "socks",
         "trio"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/httpcore-1.0.9-py3-none-any.whl"
     },
     "httpcore2": {
       "name": "httpcore2",
@@ -1357,7 +1407,8 @@
         "http2",
         "socks",
         "trio"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/httpcore2-2.15.1-py3-none-any.whl"
     },
     "httptools": {
       "name": "httptools",
@@ -1369,7 +1420,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/httptools-0.9.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "httpx": {
       "name": "httpx",
@@ -1406,7 +1458,8 @@
         "http2",
         "socks",
         "zstd"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/httpx-0.28.1-py3-none-any.whl"
     },
     "httpx-sse": {
       "name": "httpx-sse",
@@ -1418,7 +1471,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/httpx_sse-0.4.3-py3-none-any.whl"
     },
     "httpx2": {
       "name": "httpx2",
@@ -1453,7 +1507,8 @@
         "socks",
         "ws",
         "zstd"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/httpx2-2.15.1-py3-none-any.whl"
     },
     "hyperframe": {
       "name": "hyperframe",
@@ -1465,7 +1520,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/hyperframe-6.1.0-py3-none-any.whl"
     },
     "idna": {
       "name": "idna",
@@ -1486,7 +1542,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "all"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/idna-3.20-py3-none-any.whl"
     },
     "isodate": {
       "name": "isodate",
@@ -1498,7 +1555,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/isodate-0.7.2-py3-none-any.whl"
     },
     "itsdangerous": {
       "name": "itsdangerous",
@@ -1510,7 +1568,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/itsdangerous-2.2.0-py3-none-any.whl"
     },
     "jiter": {
       "name": "jiter",
@@ -1522,7 +1581,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/jiter-0.17.0-cp311-cp311-musllinux_1_1_aarch64.whl"
     },
     "jmespath": {
       "name": "jmespath",
@@ -1534,7 +1594,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/jmespath-1.1.0-py3-none-any.whl"
     },
     "joserfc": {
       "name": "joserfc",
@@ -1551,7 +1612,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "drafts"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/joserfc-1.7.4-py3-none-any.whl"
     },
     "jsonpatch": {
       "name": "jsonpatch",
@@ -1565,7 +1627,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/jsonpatch-1.36-py3-none-any.whl"
     },
     "jsonpointer": {
       "name": "jsonpointer",
@@ -1577,7 +1640,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/jsonpointer-3.4-py3-none-any.whl"
     },
     "jsonschema": {
       "name": "jsonschema",
@@ -1614,7 +1678,8 @@
       "providedExtras": [
         "format",
         "format-nongpl"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/jsonschema-4.26.0-py3-none-any.whl"
     },
     "jsonschema-specifications": {
       "name": "jsonschema-specifications",
@@ -1628,7 +1693,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/jsonschema_specifications-2025.9.1-py3-none-any.whl"
     },
     "langchain-classic": {
       "name": "langchain-classic",
@@ -1684,7 +1750,8 @@
         "perplexity",
         "together",
         "xai"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/langchain_classic-1.0.7-py3-none-any.whl"
     },
     "langchain-core": {
       "name": "langchain-core",
@@ -1706,7 +1773,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/langchain_core-1.4.8-py3-none-any.whl"
     },
     "langchain-protocol": {
       "name": "langchain-protocol",
@@ -1720,7 +1788,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/langchain_protocol-0.0.20-py3-none-any.whl"
     },
     "langchain-text-splitters": {
       "name": "langchain-text-splitters",
@@ -1734,7 +1803,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/langchain_text_splitters-1.1.2-py3-none-any.whl"
     },
     "langsmith": {
       "name": "langsmith",
@@ -1812,7 +1882,8 @@
         "sandbox-auth",
         "strands-agents",
         "vcr"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/langsmith-0.14.11-py3-none-any.whl"
     },
     "ldap3": {
       "name": "ldap3",
@@ -1826,7 +1897,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/ldap3-2.9.1-py2.py3-none-any.whl"
     },
     "loguru": {
       "name": "loguru",
@@ -1868,7 +1940,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "dev"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/loguru-0.7.3-py3-none-any.whl"
     },
     "lxml": {
       "name": "lxml",
@@ -1891,7 +1964,8 @@
         "html5",
         "htmlsoup",
         "html-clean"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/lxml-6.1.1-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "mako": {
       "name": "Mako",
@@ -1912,7 +1986,8 @@
         "testing",
         "babel",
         "lingua"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/mako-1.4.3-py3-none-any.whl"
     },
     "markdown": {
       "name": "Markdown",
@@ -1937,7 +2012,8 @@
       "providedExtras": [
         "testing",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/markdown-3.10.2-py3-none-any.whl"
     },
     "markdown-it-py": {
       "name": "markdown-it-py",
@@ -1986,7 +2062,8 @@
         "profiling",
         "rtd",
         "testing"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/markdown_it_py-4.2.0-py3-none-any.whl"
     },
     "markupsafe": {
       "name": "MarkupSafe",
@@ -1998,14 +2075,15 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/markupsafe-3.0.4-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "mcp": {
       "name": "mcp",
-      "version": "1.28.1",
-      "filename": "mcp-1.28.1-py3-none-any.whl",
-      "url": "https://files.pythonhosted.org/packages/e2/5e/d118fce19f87a2e7d8101c35c8ae0ec289098a4df0ff244cec23e415aca0/mcp-1.28.1-py3-none-any.whl",
-      "sha256": "2726bca5e7193f61c5dde8b12500a6de2d9acf6d1a1c0be9e8c2e706437991df",
+      "version": "1.30.0",
+      "filename": "mcp-1.30.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/f5/f4/e58bc33317c92a0203664daaf00bf6f41166cc0149e5d6870a03f7cd004a/mcp-1.30.0-py3-none-any.whl",
+      "sha256": "666edb5009503e1047c9d60346a756f94b261f05cc2625f23d41c728ffc484d0",
       "requiresPython": ">=3.10",
       "requiresDist": [
         "anyio>=4.5",
@@ -2036,7 +2114,8 @@
         "cli",
         "rich",
         "ws"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/mcp-1.30.0-py3-none-any.whl"
     },
     "mdurl": {
       "name": "mdurl",
@@ -2048,7 +2127,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/mdurl-0.1.2-py3-none-any.whl"
     },
     "msal": {
       "name": "msal",
@@ -2069,7 +2149,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "broker"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/msal-1.39.0-py3-none-any.whl"
     },
     "msal-extensions": {
       "name": "msal-extensions",
@@ -2086,7 +2167,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "portalocker"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/msal_extensions-1.3.1-py3-none-any.whl"
     },
     "multidict": {
       "name": "multidict",
@@ -2100,7 +2182,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/multidict-6.9.1-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "mypy-extensions": {
       "name": "mypy_extensions",
@@ -2112,7 +2195,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/mypy_extensions-1.1.0-py3-none-any.whl"
     },
     "numpy": {
       "name": "numpy",
@@ -2124,7 +2208,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/numpy-2.4.6-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "openai": {
       "name": "openai",
@@ -2159,7 +2244,8 @@
         "datalib",
         "realtime",
         "voice-helpers"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/openai-2.29.0-py3-none-any.whl"
     },
     "opentelemetry-api": {
       "name": "opentelemetry-api",
@@ -2173,7 +2259,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_api-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-exporter-otlp": {
       "name": "opentelemetry-exporter-otlp",
@@ -2188,7 +2275,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_exporter_otlp-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-exporter-otlp-proto-common": {
       "name": "opentelemetry-exporter-otlp-proto-common",
@@ -2202,7 +2290,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_exporter_otlp_proto_common-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-exporter-otlp-proto-grpc": {
       "name": "opentelemetry-exporter-otlp-proto-grpc",
@@ -2227,7 +2316,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "gcp-auth"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_exporter_otlp_proto_grpc-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-exporter-otlp-proto-http": {
       "name": "opentelemetry-exporter-otlp-proto-http",
@@ -2250,7 +2340,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "gcp-auth"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_exporter_otlp_proto_http-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation": {
       "name": "opentelemetry-instrumentation",
@@ -2267,7 +2358,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-aiohttp-client": {
       "name": "opentelemetry-instrumentation-aiohttp-client",
@@ -2288,7 +2380,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_aiohttp_client-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-asgi": {
       "name": "opentelemetry-instrumentation-asgi",
@@ -2309,7 +2402,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_asgi-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-fastapi": {
       "name": "opentelemetry-instrumentation-fastapi",
@@ -2330,7 +2424,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_fastapi-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-httpx": {
       "name": "opentelemetry-instrumentation-httpx",
@@ -2351,7 +2446,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_httpx-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-logging": {
       "name": "opentelemetry-instrumentation-logging",
@@ -2369,7 +2465,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_logging-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-redis": {
       "name": "opentelemetry-instrumentation-redis",
@@ -2389,7 +2486,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_redis-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-requests": {
       "name": "opentelemetry-instrumentation-requests",
@@ -2409,7 +2507,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_requests-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-sqlalchemy": {
       "name": "opentelemetry-instrumentation-sqlalchemy",
@@ -2430,7 +2529,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_sqlalchemy-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-instrumentation-system-metrics": {
       "name": "opentelemetry-instrumentation-system-metrics",
@@ -2450,7 +2550,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "instruments"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_instrumentation_system_metrics-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-proto": {
       "name": "opentelemetry-proto",
@@ -2464,7 +2565,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_proto-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-sdk": {
       "name": "opentelemetry-sdk",
@@ -2484,7 +2586,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "file-configuration"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_sdk-1.42.1-py3-none-any.whl"
     },
     "opentelemetry-semantic-conventions": {
       "name": "opentelemetry-semantic-conventions",
@@ -2499,7 +2602,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_semantic_conventions-0.63b1-py3-none-any.whl"
     },
     "opentelemetry-util-http": {
       "name": "opentelemetry-util-http",
@@ -2511,7 +2615,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/opentelemetry_util_http-0.63b1-py3-none-any.whl"
     },
     "orjson": {
       "name": "orjson",
@@ -2523,7 +2628,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/orjson-3.11.9-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "packaging": {
       "name": "packaging",
@@ -2535,7 +2641,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/packaging-26.3-py3-none-any.whl"
     },
     "pathspec": {
       "name": "pathspec",
@@ -2555,7 +2662,8 @@
         "hyperscan",
         "optional",
         "re2"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pathspec-1.1.1-py3-none-any.whl"
     },
     "pgvector": {
       "name": "pgvector",
@@ -2569,15 +2677,16 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pgvector-0.4.2-py3-none-any.whl"
     },
     "pillow": {
       "name": "pillow",
-      "version": "12.3.0",
-      "filename": "pillow-12.3.0-cp311-cp311-musllinux_1_2_aarch64.whl",
-      "url": "https://files.pythonhosted.org/packages/a3/48/9c58b685e69d49c31af6c8eb9012055fab7e665785165c84796e2c73ce72/pillow-12.3.0-cp311-cp311-musllinux_1_2_aarch64.whl",
-      "sha256": "4f883547d4b7f0495ebe7056b0cc2aea76094e7a4abc8e933540f3271df27d9c",
-      "requiresPython": ">=3.10",
+      "version": "13.0.0",
+      "filename": "pillow-13.0.0-cp311-cp311-musllinux_1_2_aarch64.whl",
+      "url": "https://files.pythonhosted.org/packages/aa/a4/5a398b8ec2c37145397d6461c0b551c23ec03072aa64f357aed25e582b00/pillow-13.0.0-cp311-cp311-musllinux_1_2_aarch64.whl",
+      "sha256": "10b5019883c98f1dd819ca48ffc6f33a91cee04948fe637c605f4345c7cafd6f",
+      "requiresPython": ">=3.11",
       "requiresDist": [
         "furo; extra == \"docs\"",
         "olefile; extra == \"docs\"",
@@ -2597,6 +2706,7 @@
         "markdown2; extra == \"tests\"",
         "olefile; extra == \"tests\"",
         "packaging; extra == \"tests\"",
+        "psutil; (sys_platform == \"linux\" or sys_platform == \"darwin\") and extra == \"tests\"",
         "pytest; extra == \"tests\"",
         "pytest-cov; extra == \"tests\"",
         "pytest-timeout; extra == \"tests\"",
@@ -2614,7 +2724,8 @@
         "test-arrow",
         "tests",
         "xmp"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pillow-13.0.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "platformdirs": {
       "name": "platformdirs",
@@ -2626,7 +2737,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/platformdirs-4.13.5-py3-none-any.whl"
     },
     "propcache": {
       "name": "propcache",
@@ -2638,7 +2750,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/propcache-0.5.4-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "protobuf": {
       "name": "protobuf",
@@ -2650,7 +2763,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/protobuf-6.33.6-py3-none-any.whl"
     },
     "psutil": {
       "name": "psutil",
@@ -2704,7 +2818,8 @@
       "providedExtras": [
         "dev",
         "test"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/psutil-7.2.2-cp36-abi3-musllinux_1_2_aarch64.whl"
     },
     "psycopg": {
       "name": "psycopg",
@@ -2754,7 +2869,8 @@
         "test",
         "dev",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/psycopg-3.3.4-py3-none-any.whl"
     },
     "psycopg-binary": {
       "name": "psycopg-binary",
@@ -2766,7 +2882,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/psycopg_binary-3.3.4-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "psycopg2-binary": {
       "name": "psycopg2-binary",
@@ -2778,7 +2895,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/psycopg2_binary-2.9.12-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "pyasn1": {
       "name": "pyasn1",
@@ -2790,7 +2908,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pyasn1-0.6.4-py3-none-any.whl"
     },
     "pycares": {
       "name": "pycares",
@@ -2808,7 +2927,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "idna"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pycares-4.11.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "pycparser": {
       "name": "pycparser",
@@ -2820,7 +2940,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pycparser-3.11-py3-none-any.whl"
     },
     "pycrdt": {
       "name": "pycrdt",
@@ -2836,7 +2957,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pycrdt-0.14.8-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "pydantic": {
       "name": "pydantic",
@@ -2858,7 +2980,8 @@
       "providedExtras": [
         "email",
         "timezone"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pydantic-2.13.4-py3-none-any.whl"
     },
     "pydantic-core": {
       "name": "pydantic_core",
@@ -2872,7 +2995,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pydantic_core-2.46.4-cp311-cp311-musllinux_1_1_aarch64.whl"
     },
     "pydantic-settings": {
       "name": "pydantic-settings",
@@ -2902,7 +3026,8 @@
         "gcp-secret-manager",
         "toml",
         "yaml"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pydantic_settings-2.16.1-py3-none-any.whl"
     },
     "pygments": {
       "name": "Pygments",
@@ -2919,7 +3044,8 @@
       "providedExtras": [
         "plugins",
         "windows-terminal"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pygments-2.21.0-py3-none-any.whl"
     },
     "pyjwt": {
       "name": "PyJWT",
@@ -2938,7 +3064,8 @@
       ],
       "providedExtras": [
         "crypto"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pyjwt-2.15.1-py3-none-any.whl"
     },
     "pyotp": {
       "name": "pyotp",
@@ -2957,7 +3084,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "test"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pyotp-2.9.0-py3-none-any.whl"
     },
     "python-dateutil": {
       "name": "python-dateutil",
@@ -2971,7 +3099,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/python_dateutil-2.9.0.post0-py2.py3-none-any.whl"
     },
     "python-dotenv": {
       "name": "python-dotenv",
@@ -2987,7 +3116,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "cli"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/python_dotenv-1.2.4-py3-none-any.whl"
     },
     "python-engineio": {
       "name": "python-engineio",
@@ -3012,7 +3142,8 @@
         "asyncio-client",
         "dev",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/python_engineio-4.14.0-py3-none-any.whl"
     },
     "python-mimeparse": {
       "name": "python-mimeparse",
@@ -3028,7 +3159,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "test"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/python_mimeparse-2.0.0-py3-none-any.whl"
     },
     "python-multipart": {
       "name": "python-multipart",
@@ -3040,7 +3172,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/python_multipart-0.0.32-py3-none-any.whl"
     },
     "python-socketio": {
       "name": "python-socketio",
@@ -3066,7 +3199,8 @@
         "asyncio-client",
         "dev",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/python_socketio-5.16.2-py3-none-any.whl"
     },
     "pytokens": {
       "name": "pytokens",
@@ -3090,7 +3224,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "dev"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/pytokens-0.4.1-py3-none-any.whl"
     },
     "pytz": {
       "name": "pytz",
@@ -3102,7 +3237,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pytz-2026.2-py2.py3-none-any.whl"
     },
     "pyyaml": {
       "name": "PyYAML",
@@ -3114,7 +3250,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/pyyaml-6.0.3-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "qrcode": {
       "name": "qrcode",
@@ -3134,7 +3271,8 @@
         "all",
         "pil",
         "png"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/qrcode-8.2-py3-none-any.whl"
     },
     "rank-bm25": {
       "name": "rank-bm25",
@@ -3151,7 +3289,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "dev"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/rank_bm25-0.2.2-py3-none-any.whl"
     },
     "redis": {
       "name": "redis",
@@ -3182,7 +3321,8 @@
         "ocsp",
         "otel",
         "xxhash"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/redis-8.0.1-py3-none-any.whl"
     },
     "referencing": {
       "name": "referencing",
@@ -3198,7 +3338,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/referencing-0.37.0-py3-none-any.whl"
     },
     "regex": {
       "name": "regex",
@@ -3210,7 +3351,8 @@
       "requiresDist": [],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/regex-2026.5.9-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "requests": {
       "name": "requests",
@@ -3233,7 +3375,8 @@
         "security",
         "socks",
         "use-chardet-on-py3"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/requests-2.34.2-py3-none-any.whl"
     },
     "requests-toolbelt": {
       "name": "requests-toolbelt",
@@ -3247,7 +3390,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/requests_toolbelt-1.0.0-py2.py3-none-any.whl"
     },
     "rich": {
       "name": "rich",
@@ -3266,7 +3410,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "jupyter"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/rich-13.9.4-py3-none-any.whl"
     },
     "rpds-py": {
       "name": "rpds-py",
@@ -3278,7 +3423,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/rpds_py-2026.9.1-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "s3transfer": {
       "name": "s3transfer",
@@ -3295,7 +3441,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "crt"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/s3transfer-0.16.1-py3-none-any.whl"
     },
     "shellingham": {
       "name": "shellingham",
@@ -3307,7 +3454,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/shellingham-1.5.4-py2.py3-none-any.whl"
     },
     "simple-websocket": {
       "name": "simple-websocket",
@@ -3329,7 +3477,8 @@
       "providedExtras": [
         "dev",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/simple_websocket-1.1.0-py3-none-any.whl"
     },
     "six": {
       "name": "six",
@@ -3341,7 +3490,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/six-1.17.0-py2.py3-none-any.whl"
     },
     "sniffio": {
       "name": "sniffio",
@@ -3353,7 +3503,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/sniffio-1.3.1-py3-none-any.whl"
     },
     "socksio": {
       "name": "socksio",
@@ -3365,7 +3516,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/socksio-1.0.0-py3-none-any.whl"
     },
     "soupsieve": {
       "name": "soupsieve",
@@ -3377,7 +3529,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/soupsieve-3.0.3-py3-none-any.whl"
     },
     "sqlalchemy": {
       "name": "SQLAlchemy",
@@ -3448,7 +3601,8 @@
         "asyncmy",
         "aiosqlite",
         "sqlcipher"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/sqlalchemy-2.0.50-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "sse-starlette": {
       "name": "sse-starlette",
@@ -3477,7 +3631,8 @@
         "uvicorn",
         "granian",
         "daphne"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/sse_starlette-3.5.0-py3-none-any.whl"
     },
     "starlette": {
       "name": "starlette",
@@ -3501,7 +3656,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "full"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/starlette-1.9.0-py3-none-any.whl"
     },
     "starlette-compress": {
       "name": "starlette-compress",
@@ -3518,7 +3674,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/starlette_compress-1.7.1-py3-none-any.whl"
     },
     "starsessions": {
       "name": "starsessions",
@@ -3538,7 +3695,8 @@
       ],
       "providedExtras": [
         "redis"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/starsessions-2.2.1-py3-none-any.whl"
     },
     "tenacity": {
       "name": "tenacity",
@@ -3558,7 +3716,8 @@
       "providedExtras": [
         "doc",
         "test"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/tenacity-9.2.1-py3-none-any.whl"
     },
     "tiktoken": {
       "name": "tiktoken",
@@ -3576,7 +3735,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "blobfile"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/tiktoken-0.13.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "tqdm": {
       "name": "tqdm",
@@ -3602,7 +3762,8 @@
         "slack",
         "telegram",
         "notebook"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/tqdm-4.70.1-py3-none-any.whl"
     },
     "truststore": {
       "name": "truststore",
@@ -3614,7 +3775,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/truststore-0.10.5-py3-none-any.whl"
     },
     "typer": {
       "name": "typer",
@@ -3631,7 +3793,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/typer-0.25.1-py3-none-any.whl"
     },
     "typing-extensions": {
       "name": "typing_extensions",
@@ -3643,7 +3806,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/typing_extensions-4.16.0-py3-none-any.whl"
     },
     "typing-inspection": {
       "name": "typing-inspection",
@@ -3657,7 +3821,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/typing_inspection-0.4.4-py3-none-any.whl"
     },
     "urllib3": {
       "name": "urllib3",
@@ -3680,7 +3845,8 @@
         "h2",
         "socks",
         "zstd"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/urllib3-2.8.0-py3-none-any.whl"
     },
     "uuid-utils": {
       "name": "uuid_utils",
@@ -3692,7 +3858,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/uuid_utils-0.18.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "uvicorn": {
       "name": "uvicorn",
@@ -3718,7 +3885,8 @@
       ],
       "providedExtras": [
         "standard"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/uvicorn-0.51.0-py3-none-any.whl"
     },
     "uvloop": {
       "name": "uvloop",
@@ -3748,7 +3916,8 @@
         "test",
         "dev",
         "docs"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/uvloop-0.23.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "validators": {
       "name": "validators",
@@ -3764,7 +3933,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "crypto-eth-addresses"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/validators-0.35.0-py3-none-any.whl"
     },
     "watchfiles": {
       "name": "watchfiles",
@@ -3778,7 +3948,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/watchfiles-1.3.0-cp310-abi3-musllinux_1_1_aarch64.whl"
     },
     "wcwidth": {
       "name": "wcwidth",
@@ -3790,7 +3961,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/wcwidth-0.9.3-cp310-abi3-musllinux_1_2_aarch64.whl"
     },
     "websockets": {
       "name": "websockets",
@@ -3802,7 +3974,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/websockets-17.3-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "wrapt": {
       "name": "wrapt",
@@ -3819,7 +3992,8 @@
       "requestedExtras": [],
       "providedExtras": [
         "dev"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/wrapt-2.5.1-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "wsproto": {
       "name": "wsproto",
@@ -3833,7 +4007,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/wsproto-1.3.2-py3-none-any.whl"
     },
     "xxhash": {
       "name": "xxhash",
@@ -3845,7 +4020,8 @@
       "requiresDist": [],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/xxhash-4.0.2-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "yarl": {
       "name": "yarl",
@@ -3861,7 +4037,8 @@
       ],
       "requested": false,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/yarl-1.25.1-cp311-cp311-musllinux_1_2_aarch64.whl"
     },
     "youtube-transcript-api": {
       "name": "youtube-transcript-api",
@@ -3876,7 +4053,8 @@
       ],
       "requested": true,
       "requestedExtras": [],
-      "providedExtras": []
+      "providedExtras": [],
+      "resolverDownloadUrl": "file:///inputs/wheels/youtube_transcript_api-1.2.4-py3-none-any.whl"
     },
     "zstandard": {
       "name": "zstandard",
@@ -3893,20 +4071,30 @@
       "requestedExtras": [],
       "providedExtras": [
         "cffi"
-      ]
+      ],
+      "resolverDownloadUrl": "file:///inputs/wheels/zstandard-0.25.0-cp311-cp311-musllinux_1_2_aarch64.whl"
     }
   },
-  "resolverReportSha256": "2ba3b58c343ac702985cbf4ad151d2002bc8cf3ec20398965521e7a1194952f9",
+  "resolverReportSha256": "610ac92f11f24862af3523f7f3fe1d8576d4411ed3701900447de87a014cc80d",
   "baseImage": "python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929",
   "upstreamCommit": "91ea4e3421d1d8069f13d4a463fcb5986d94ea60",
   "nativeWheel": {
+    "buildInputs": {
+      "bootstrapSha256": "96051f6f3340c6d936196c2a320ee585db9dd4eff381f560b36b5adb1c825d57",
+      "buildToolsSha256": "572558c3e80ff3bf1f8cbdc4f16c7bb7e0372cbd43cd8f57736c898069f3f06d",
+      "checkerBuildAstSha256": "b4a7b25cb2f7ce3877b9b346fbc501a2c1bf83ca12cc104355d9cef48c4c8f5d",
+      "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
+      "recipePrefixSha256": "9df331fe1da73555460247864a074eddb389a6f0cae9daf71cc694510532dba0"
+    },
     "filename": "google_re2-1.1.20251105-cp311-cp311-linux_aarch64.whl",
-    "sha256": "21c25083f34e0a32008ebd7df33f486e4ffa797e3e89ed5c87d8267535b7c101",
-    "toolchainInventorySha256": "f81df47ecfc8f05cbad9074a095261046c8c759dff755f348631367f8eeda27e",
-    "recipeSha256": "1b06f1bf15bdbf0e1399b3df4e89e85ddb7dc0c5ae0c7f8a789fdbadc6df5765",
     "nativeBuildLockSha256": "7e7a5826eaa23ad81ece973a4687b5c41e9c0795731f9ca691482e2f26991cef",
-    "sourceDateEpoch": 1762353507
+    "recipeSha256": "c7c767cdc810e0009574b7461752b6507bf1fb8c9235d4660513fe81c1a5fa9a",
+    "sha256": "21c25083f34e0a32008ebd7df33f486e4ffa797e3e89ed5c87d8267535b7c101",
+    "sourceDateEpoch": 1762353507,
+    "status": "reproduced-reviewed-two-independent-builds",
+    "toolchainInventorySha256": "f81df47ecfc8f05cbad9074a095261046c8c759dff755f348631367f8eeda27e",
+    "independentBuilds": 2
   },
-  "constraintSha256": "167003de01314162cf58f04ee3d2172c9957262a6dc8d62ca207591d0ec250dd",
-  "scope": "Dependency artifact proof only; not app/auth/startup/native-image/scan proof"
+  "constraintSha256": "a2ae667d7f54bbbe0d2adf324e55a001bcc2aea7ae3fbdabbbf3c8715f97b4ad",
+  "scope": "Resolution/native-target metadata proof only; actual installation/native/auth/import/security remain mandatory"
 }

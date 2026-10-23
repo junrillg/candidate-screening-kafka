@@ -1,18 +1,22 @@
 """Validate installed ELF objects in their real eager Python/Bash hosts."""
 
 import hashlib
+import importlib
 import json
 import os
 import selectors
 import subprocess
 import sys
 from pathlib import Path
+from types import ModuleType
 
 ROOTS = ['/bin', '/sbin', '/lib', '/usr/bin', '/usr/sbin', '/usr/lib', '/usr/local', '/opt/venv']
 CLEAN = {'PATH': '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin'}
 # CPython's installed Makefile retains this exact pinned-base object for linking an interpreter.
 LINKER_INPUTS = {
-    '/usr/local/lib/python3.11/config-3.11-aarch64-linux-musl/python.o': 'ea5a0583fd58289e9d7be78291167cadef94262b03f57cee7f6fc32a987441d0'
+    '/usr/local/lib/python3.11/config-3.11-aarch64-linux-musl/python.o': (
+        'ea5a0583fd58289e9d7be78291167cadef94262b03f57cee7f6fc32a987441d0'
+    )
 }
 
 
@@ -83,11 +87,12 @@ def python_host(mode):
         not {'LD_LIBRARY_PATH', 'LD_PRELOAD', 'PYTHONPATH'}.intersection(os.environ),
         'Unexpected loader environment',
     )
+    extensions: list[ModuleType]
     if mode == 'numpy':
         import numpy as np
-        import numpy._core._multiarray_umath as core
         import numpy.linalg._umath_linalg as linalg
 
+        core = importlib.import_module('numpy._core._multiarray_umath')
         require(np.__version__ == '2.4.6', 'Wrong NumPy')
         require(
             np.allclose(
@@ -105,29 +110,31 @@ def python_host(mode):
         extensions = [core, linalg]
     elif mode == 'psycopg2':
         import psycopg2
-        import psycopg2._psycopg as extension
+        import psycopg2._psycopg as psycopg2_extension
         from psycopg2 import extensions as adapters
 
+        version = vars(psycopg2).get('__version__')
         require(
-            psycopg2.__version__.split()[0] == '2.9.12'
+            isinstance(version, str)
+            and version.split()[0] == '2.9.12'
             and adapters.libpq_version() > 0
             and adapters.adapt(42).getquoted() == b'42',
             'Psycopg2 native operation failed',
         )
-        extensions = [extension]
+        extensions = [psycopg2_extension]
     elif mode == 'psycopg3':
         import psycopg
         import psycopg_binary._psycopg as adaptation
-        import psycopg_binary.pq as extension
         from psycopg import pq
 
+        psycopg3_extension = importlib.import_module('psycopg_binary.pq')
         require(
             psycopg.__version__ == '3.3.4' and pq.__impl__ == 'binary' and pq.version() > 0,
             'Psycopg3 binary operation failed',
         )
-        extensions = [extension, adaptation]
+        extensions = [psycopg3_extension, adaptation]
     elif mode == 'tkinter':
-        import _tkinter as extension
+        import _tkinter as tkinter_extension
         import tkinter
 
         interpreter = tkinter.Tcl()
@@ -137,12 +144,17 @@ def python_host(mode):
             and not interpreter.call('info', 'exists', 'tk_version'),
             'Headless Tcl operation failed',
         )
-        extensions = [extension]
+        extensions = [tkinter_extension]
     else:
         raise RuntimeError('Unknown native host')
     require(sys.getdlopenflags() == os.RTLD_NOW, 'Host binding flags changed')
+    roots = []
+    for module in extensions:
+        if module.__file__ is None:
+            raise NativeFailure('Native module file absent')
+        roots.append(str(Path(module.__file__).resolve()))
     return {
-        'roots': [str(Path(module.__file__).resolve()) for module in extensions],
+        'roots': roots,
         'maps': mapped(Path('/proc/self/maps').read_text()),
         'dlopenFlags': sys.getdlopenflags(),
     }
@@ -293,8 +305,7 @@ def validate():
     needed = ','.join(row['needed'] for row in inventory.values())
     require(
         all(
-            name in needed
-            for name in ('libssl.so.3', 'libcrypto.so.3', 'libre2.so.11', 'libicuuc.so.78', 'libz.so.1')
+            name in needed for name in ('libssl.so.3', 'libcrypto.so.3', 'libre2.so.11', 'libicuuc.so.78', 'libz.so.1')
         ),
         'Required native dependency absent',
     )

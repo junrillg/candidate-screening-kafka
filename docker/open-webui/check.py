@@ -26,7 +26,7 @@ USAGE = (
     '       check.py binding SOURCE_ROOT | installed APP_ROOT | auth BACKEND_ROOT | '
     'imports BACKEND_ROOT\n'
     '       check.py help | --help | -h\n'
-    'Modes: source checks original bytes and the exact four-pin input; lock refuses '
+    'Modes: source checks original bytes and the exact five-package input; lock refuses '
     'unresolved\n'
     'or unreviewed locks; installed checks the complete reviewed package inventory/assets;'
     '\n'
@@ -105,13 +105,11 @@ def checked_lock():
         'Resolved input mismatch',
     )
     require(
-        manifest['target']
-        == {'os': 'linux', 'architecture': 'aarch64', 'python': '3.11', 'libc': 'musl'},
+        manifest['target'] == {'os': 'linux', 'architecture': 'aarch64', 'python': '3.11', 'libc': 'musl'},
         'Wrong lock target',
     )
     require(
-        manifest['resolver'] == 'pip'
-        and manifest['resolverVersion'] == build_lock()['tools']['pip']['version'],
+        manifest['resolver'] == 'pip' and manifest['resolverVersion'] == build_lock()['tools']['pip']['version'],
         'Resolver provenance mismatch',
     )
     config()
@@ -189,12 +187,13 @@ def source(root):
     for old, new in [
         ('cryptography==48.0.0', 'cryptography==50.0.2'),
         ('PyJWT[crypto]==2.13.0', 'PyJWT[crypto]==2.15.1'),
-        ('mcp==1.27.2', 'mcp==1.28.1'),
+        ('mcp==1.27.2', 'mcp==1.30.0'),
+        ('pillow==12.3.0', 'pillow==13.0.0'),
         ('aiohttp==3.14.3', 'aiohttp==3.14.4'),
     ]:
         require(patched.count(old) == 1, 'Unexpected upstream dependency input')
         patched = patched.replace(old, new)
-    require(patched == (HERE / 'requirements-slim.in').read_text(), 'Changes beyond reviewed four pins')
+    require(patched == (HERE / 'requirements-slim.in').read_text(), 'Changes beyond reviewed five package pins')
     require(sha(HERE / 'requirements-slim.in') == LOCK['requirementsInputSha256'], 'Input digest changed')
     require(json.loads((root / 'package.json').read_text())['version'] == LOCK['upstream']['version'], 'Wrong release')
 
@@ -267,9 +266,7 @@ def native_build_inputs():
     )
     return {
         'recipePrefixSha256': hashlib.sha256(recipe[0]).hexdigest(),
-        'checkerBuildAstSha256': hashlib.sha256(
-            ast.dump(ast.Module(body=nodes, type_ignores=[])).encode()
-        ).hexdigest(),
+        'checkerBuildAstSha256': hashlib.sha256(ast.dump(ast.Module(body=nodes, type_ignores=[])).encode()).hexdigest(),
         'nativeBuildLockSha256': sha(HERE / 'native-build-lock.json'),
         'bootstrapSha256': sha(HERE / 'bootstrap.lock'),
         'buildToolsSha256': sha(HERE / 'build-tools.lock'),
@@ -490,6 +487,7 @@ def auth(backend):
         {n.name for n in functions if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))} == names,
         'Missing production auth function',
     )
+    session_secret = 'synthetic-build-only-key-' * 3
     ns = {
         'asyncio': asyncio,
         'bcrypt': bcrypt,
@@ -499,35 +497,39 @@ def auth(backend):
         'Union': Union,
         'uuid': uuid,
         'UTC': UTC,
-        'SESSION_SECRET': 'synthetic-build-only-key-' * 3,
+        'SESSION_SECRET': session_secret,
         'ALGORITHM': 'HS256',
         'PASSWORD_HASH_ALGORITHM': 'bcrypt',
         'PASSWORD_BCRYPT_MAX_BYTES': 72,
     }
     exec(compile(ast.Module(body=functions, type_ignores=[]), str(path), 'exec'), ns)
-    token = ns['create_token']({'id': 'synthetic-user'}, dt.timedelta(minutes=1))
-    require(ns['decode_token'](token)['id'] == 'synthetic-user', 'JWT roundtrip failed')
+    create_token = ns['create_token']
+    decode_token = ns['decode_token']
+    get_password_hash = ns['get_password_hash']
+    verify_password = ns['verify_password']
+    if not callable(create_token) or not callable(decode_token):
+        raise RuntimeError('Production token function absent')
+    if not callable(get_password_hash) or not callable(verify_password):
+        raise RuntimeError('Production password function absent')
+    token = create_token({'id': 'synthetic-user'}, dt.timedelta(minutes=1))
+    require(decode_token(token)['id'] == 'synthetic-user', 'JWT roundtrip failed')
     require(
-        ns['decode_token'](ns['create_token']({'id': 'synthetic-user'}, dt.timedelta(seconds=-1))) is None,
+        decode_token(create_token({'id': 'synthetic-user'}, dt.timedelta(seconds=-1))) is None,
         'Expired token accepted',
     )
     require(
-        ns['decode_token'](
-            jwt.encode({'id': 'synthetic-user'}, 'other-synthetic-key-' * 4, algorithm='HS256')
-        )
-        is None,
+        decode_token(jwt.encode({'id': 'synthetic-user'}, 'other-synthetic-key-' * 4, algorithm='HS256')) is None,
         'Wrong signing key accepted',
     )
     require(
-        ns['decode_token'](jwt.encode({'id': 'synthetic-user'}, ns['SESSION_SECRET'], algorithm='HS384'))
-        is None,
+        decode_token(jwt.encode({'id': 'synthetic-user'}, session_secret, algorithm='HS384')) is None,
         'Unexpected algorithm accepted',
     )
     for algorithm in ['bcrypt', 'argon2']:
         ns['PASSWORD_HASH_ALGORITHM'] = algorithm
-        value = asyncio.run(ns['get_password_hash']('synthetic-test-password'))
-        require(asyncio.run(ns['verify_password']('synthetic-test-password', value)), 'Password roundtrip failed')
-        require(not asyncio.run(ns['verify_password']('wrong-synthetic-password', value)), 'Wrong password accepted')
+        value = asyncio.run(get_password_hash('synthetic-test-password'))
+        require(asyncio.run(verify_password('synthetic-test-password', value)), 'Password roundtrip failed')
+        require(not asyncio.run(verify_password('wrong-synthetic-password', value)), 'Wrong password accepted')
     cipher = AESGCM(b'a' * 32)
     sealed = cipher.encrypt(b'b' * 12, b'synthetic-build-only', b'context')
     require(cipher.decrypt(b'b' * 12, sealed, b'context') == b'synthetic-build-only', 'AESGCM roundtrip failed')
@@ -573,7 +575,9 @@ def imports(backend):
             'import open_webui.main; from open_webui.retrieval.vector import factory; assert '
             'factory.VECTOR_DB_CLIENT is None'
         )
-        result = subprocess.run([sys.executable, '-c', code], cwd=backend, env=env, capture_output=True, timeout=90)
+        result = subprocess.run(
+            [sys.executable, '-B', '-c', code], cwd=backend, env=env, capture_output=True, timeout=90
+        )
         require(result.returncode == 0, 'Native offline slim import failed; no output or data disclosed')
 
 

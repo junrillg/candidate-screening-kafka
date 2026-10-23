@@ -131,6 +131,7 @@ def client(endpoint, cfg, source=None):
     from flow import Browser
     browser = Browser(endpoint)
     browser.deadline = None
+    browser.last_http_status = None
     if source is not None:
         for cookie in source.jar:
             browser.jar.set_cookie(copy.copy(cookie))
@@ -140,6 +141,7 @@ def client(endpoint, cfg, source=None):
 
     class BoundedOpener:
         def open(self, request, timeout=None):
+            browser.last_http_status = None
             require(urllib.parse.urlsplit(request.full_url).netloc == urllib.parse.urlsplit(endpoint).netloc
                     and urllib.parse.urlsplit(request.full_url).scheme == urllib.parse.urlsplit(endpoint).scheme,
                     "nonlocal_request")
@@ -148,13 +150,47 @@ def client(endpoint, cfg, source=None):
             if browser.deadline is not None:
                 timeout = min(timeout, browser.deadline - time.monotonic())
                 require(timeout > 0, "request_deadline")
-            return opener.open(request, timeout=timeout)
+            try:
+                response = opener.open(request, timeout=timeout)
+            except urllib.error.HTTPError as error:
+                browser.last_http_status = error.code
+                raise
+            browser.last_http_status = response.status
+            return response
 
     browser.http = BoundedOpener()
     browser.open_stream = lambda: opener.open(urllib.request.Request(endpoint + "/api/events",
                                                headers={"Origin": cfg["origin"]}),
                                              timeout=cfg["streamReadTimeoutSeconds"])
     return browser
+
+
+def job_error(error, http_status):
+    """Fixed categories only: exception messages and HTTP content are never evidence."""
+    fields = {"error": "job_failed"}
+    if type(http_status) is int and 100 <= http_status <= 599:
+        fields["httpStatus"] = http_status
+    if isinstance(error, CheckFailure):
+        fields["exceptionCategory"] = "check_failed"
+        if error.args and type(error.args[0]) is str and error.args[0] in {
+                "result_contract", "terminal_timeout", "request_deadline", "nonlocal_request", "redirect_rejected"}:
+            fields["checkCode"] = error.args[0]
+    elif fields.get("httpStatus", 0) >= 300:
+        fields["exceptionCategory"] = "unexpected_http_status"
+    elif isinstance(error, TimeoutError) or (
+            isinstance(error, urllib.error.URLError) and isinstance(error.reason, TimeoutError)):
+        fields["exceptionCategory"] = "request_timeout"
+    elif isinstance(error, urllib.error.URLError):
+        fields["exceptionCategory"] = "connection_failure"
+    elif isinstance(error, AssertionError):
+        fields["exceptionCategory"] = "assertion_failed"
+    elif isinstance(error, (ValueError, KeyError)):
+        fields["exceptionCategory"] = "response_contract"
+    elif isinstance(error, OSError):
+        fields["exceptionCategory"] = "transport_error"
+    else:
+        fields["exceptionCategory"] = "unexpected_exception"
+    return fields
 
 
 class Stream:
@@ -343,7 +379,7 @@ def run(cfg, make_client=client):
             marker = "Synthetic load " + str(uuid.uuid4())
             with pending_lock:
                 pending[owner.owner]["markers"].add(marker)
-            row, began = {}, time.monotonic()
+            row, began, stage = {}, time.monotonic(), "submission"
             browser.deadline = began + cfg["terminalTimeoutSeconds"]
             try:
                 profile = "I implemented Kafka consumers in a service."
@@ -356,11 +392,13 @@ def run(cfg, make_client=client):
                 row["acceptanceSeconds"] = time.monotonic() - began
                 until = began + cfg["terminalTimeoutSeconds"]
                 while time.monotonic() < until:
+                    stage = "status"
                     state = browser.request("/api/candidates/" + candidate)["status"]
                     if state in ("Completed", "Failed"):
                         row["terminal"] = state
                         row["completionSeconds"] = time.monotonic() - began
                         if state == "Completed":
+                            stage = "result"
                             result = browser.request("/api/candidates/" + candidate + "/result")
                             require(result["provider"] == cfg["expectedProvider"] and result["reviewRequired"] is True
                                     and result["candidateId"] == candidate and len(result["items"]) == 1,
@@ -375,8 +413,9 @@ def run(cfg, make_client=client):
                         return row
                     time.sleep(min(cfg["pollSeconds"], max(0, until - time.monotonic())))
                 raise CheckFailure("terminal_timeout")
-            except Exception:
-                row["error"] = "job_failed"
+            except Exception as error:
+                row.update(job_error(error, getattr(browser, "last_http_status", None)))
+                row.update(errorStage=stage, failureElapsedSeconds=time.monotonic() - began)
                 return row
 
         concurrent_jobs(job, cfg, rows)

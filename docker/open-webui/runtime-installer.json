@@ -256,6 +256,32 @@
     },
     "baseImage": "python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929"
   },
+  "ensurepip": {
+    "directories": [
+      "_bundled",
+      "__pycache__"
+    ],
+    "moduleSha256": {
+      "__main__.py": "ee735f518d0fc4dfec81f7aa3da1e052372ed4202c0da4eddd2587840beaecd7",
+      "_uninstall.py": "3a6e95d01c45e2e47c05df3c81073b895c97c1eb0e5b90ab175d6d9263fc81f2"
+    },
+    "originalSourceSha256": "0f4e3b95882c914577a9045e27ac88f78d9a0a931a409d3d0287df1cd49e945a",
+    "originalWheels": {
+      "pip": {
+        "bytes": 2110226,
+        "filename": "pip-24.0-py3-none-any.whl",
+        "sha256": "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
+        "version": "24.0"
+      },
+      "setuptools": {
+        "bytes": 1256281,
+        "filename": "setuptools-79.0.1-py3-none-any.whl",
+        "sha256": "e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51",
+        "version": "79.0.1"
+      }
+    },
+    "repairedSourceSha256": "fb17b4007a39e2b62e787ecdaa2672c64d951f9e0ce79743e38ba7b36ce0f030"
+  },
   "epoch": 1792509744,
   "installedFilesSha256": "4d7ffb0351e50b8a63feb606699c20320429cb73df23b1de9a72893f957a6f5d",
   "msgpackSourceSha256": "04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647",

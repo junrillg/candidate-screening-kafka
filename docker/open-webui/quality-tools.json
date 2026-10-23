@@ -79,6 +79,5 @@
       "version": "4.16.0"
     }
   },
-  "status": "Publisher artifact hashes pinned; new quality closure not installed or executed",
   "target": "CPython3.11 / Linux-aarch64 musl"
 }

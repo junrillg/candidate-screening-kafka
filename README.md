@@ -4,7 +4,7 @@ Submit a synthetic candidate profile against explicit job requirements and recei
 
 *Local inference with Ollama. The AWS deployment reference has not been deployed.*
 
-**Learning draft.** The core flow has passed scoped local recovery and browser checks. Viewer derivatives and a clean rebuild of the current full stack remain unfinished.
+**Learning project.** Validation uses scoped local fixtures and synthetic input. Target-scale capacity and a clean full-stack rebuild from a fresh clone remain unverified.
 
 ![Candidate submission flows through the Candidates API, Kafka and Screening worker; validated evidence returns as saved status and a browser notification.](docs/assets/flow-summary.svg)
 
@@ -40,7 +40,7 @@ Use Docker Compose on a Linux ARM64 engine:
 ./scripts/start.sh
 ```
 
-The full-stack command is currently blocked by unfinished viewer validation. Open WebUI's native-build provenance needs refreshing; AKHQ's dependency and runtime changes still need a completed build. Existing local runtime checks do not establish that a fresh clone builds successfully.
+The source builds require network access for pinned upstream sources and the initial model download. See the [operations guide](docs/operations.md) for credentials and verification commands.
 
 Open the [workbench](http://127.0.0.1:8094). Use synthetic text, submit a profile and requirements, then continue elsewhere while screening runs. Open the saved notice to review the result. See [operations](docs/operations.md) for service viewers and access.
 
@@ -54,8 +54,8 @@ Open the [workbench](http://127.0.0.1:8094). Use synthetic text, submit a profil
 
 **Limits:** synthetic text input only. Source text, results and notices expire after seven days; the owner can delete sooner. Proposed evidence does not establish candidate quality or make a hiring decision. Local inference is the default; cloud deployment and Bedrock calls require explicit configuration.
 
-## Remaining validation
+## Verification scope
 
-- Complete the AKHQ and Open WebUI builds, native compatibility checks, and dependency/security repairs. Known image vulnerabilities remain unresolved.
-- Verify the rebuilt initializer against a fresh broker, then finish historical-restore, idle-stream SQL and scoped load checks.
-- Run hosted CI against the pushed revision. Current local evidence covers specific source/image snapshots rather than the complete current checkout.
+Initializer, historical-restore, idle-stream and load checks exercise different boundaries; retain each result and its exact source/image identities. A small synthetic load does not establish the planned production capacity.
+
+Keep raw dependency findings when reviewing applicability. The AKHQ base retains medium/low vendor findings, including a [deferred Expat fix](https://ubuntu.com/security/CVE-2025-66382). Pip's vendor inventory can also match setuptools advisories whose affected modules are absent from the shipped subset; inspect the actual installed and bundled files before classifying those findings.

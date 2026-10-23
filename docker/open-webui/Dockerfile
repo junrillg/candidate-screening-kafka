@@ -52,6 +52,48 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/python -m pip check \
     && /opt/venv/bin/python /checks/check.py tools
 
+FROM dependencies AS quality
+RUN /usr/local/bin/python -m venv /opt/quality \
+    && /opt/quality/bin/python -m pip install --no-cache-dir --no-compile --only-binary=:all: --require-hashes \
+        -r /checks/bootstrap.lock -r /checks/quality-tools.lock \
+    && /opt/quality/bin/python -m pip check \
+    && /opt/venv/bin/python -m pip install --no-cache-dir --no-compile --no-deps --only-binary=:all: --require-hashes \
+        -r /checks/quality-stubs.lock \
+    && /opt/venv/bin/python -m pip check \
+    && mkdir -p /workspace/docker && ln -s /checks /workspace/docker/open-webui
+WORKDIR /workspace
+RUN --network=none /opt/quality/bin/ruff format --check --no-cache --config docker/open-webui/ruff.toml docker/open-webui \
+    && /opt/quality/bin/ruff check --no-cache --config docker/open-webui/ruff.toml docker/open-webui \
+    && /opt/quality/bin/python -I -B -m mypy --config-file docker/open-webui/mypy.ini \
+    && /opt/quality/bin/python -I -B -m mypy --config-file docker/open-webui/mypy.ini \
+        --python-executable /opt/venv/bin/python docker/open-webui/check.py docker/open-webui/native_check.py \
+    && /opt/quality/bin/python -I -B -m unittest discover -s /checks -p test_native_check.py \
+    && /opt/quality/bin/python -I -B -m unittest discover -s /checks -p test_runtime_installer.py -k InstallerBoundaries \
+    && printf 'Authored-code quality checks passed\n' > /quality-passed
+
+# Runtime-only derivative: same public recipe and signed tool admission as Dockerfile.runtime-installer.
+FROM python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929 AS runtime-installer-inputs
+ARG TARGETARCH
+RUN test "$TARGETARCH" = arm64
+COPY docker/open-webui/ /checks/
+RUN python -I /checks/runtime_installer.py fetch /inputs
+
+FROM runtime-installer-inputs AS runtime-installer
+RUN mkdir /admission \
+    && cp /lib/apk/db/installed /admission/base-apk-database.txt \
+    && apk add --no-cache git=2.54.0-r0 \
+    && cp /lib/apk/db/installed /admission/tool-apk-database.txt \
+    && apk info -vv > /admission/tool-apk-packages.txt \
+    && git --version > /admission/git-version.txt \
+    && python -I -B /checks/runtime_installer.py admit-apks /admission
+RUN --network=none python -I -m venv /opt/tools \
+    && /opt/tools/bin/python -I -m pip install --no-index --find-links=/inputs/tools \
+        --only-binary=:all: --require-hashes -r /inputs/tools.lock \
+    && /opt/tools/bin/python -I -m pip check
+RUN --network=none --mount=type=tmpfs,target=/tmp,size=536870912 \
+    /opt/tools/bin/python -I /checks/runtime_installer.py build /inputs /out
+
+
 FROM base AS runtime-files
 RUN apk add --no-cache tcl=8.6.17-r1 tk=8.6.17-r1
 ENV PATH=/opt/venv/bin:$PATH PYTHONUNBUFFERED=1 ENV=prod PORT=8080 \
@@ -71,17 +113,38 @@ COPY --from=assets /app/backend/open_webui/utils/auth.py /checks/asset-auth.py
 COPY --from=assets /app/backend/start.sh /checks/asset-start.sh
 COPY --from=dependencies /opt/venv/ /opt/venv/
 COPY --from=dependencies /usr/share/open-webui-derivative/installer-venv.json /usr/share/open-webui-derivative/installer-venv.json
+COPY --from=quality /quality-passed /usr/share/open-webui-derivative/quality-passed
 # No original site-packages, OS libraries or persistent data are inherited from assets.
 RUN cp /checks/requirements-slim.in /app/backend/requirements-slim.txt \
     && mkdir -p /app/backend/data /usr/share/open-webui-derivative \
-    && python /checks/check.py installed /app \
+    && python -B /checks/check.py installed /app \
     && /usr/local/bin/python -m pip check && /opt/venv/bin/python -m pip check \
     && apk info -vv > /usr/share/open-webui-derivative/os-packages.txt
+# Install only the reviewed runtime pip wheel; compiler/bootstrap stages retain their original pip.
+COPY --from=runtime-installer /out/installed-files.json /usr/share/open-webui-derivative/runtime-installer-files.json
+RUN --network=none --mount=type=bind,from=runtime-installer,source=/out,target=/runtime-installer,readonly \
+    echo 'db569a770b7b42367f415f5176cd2d80571d1e07b77c0a0e142469406144ce84  /runtime-installer/pip-26.2.2+local.openwebui.1-py3-none-any.whl' | sha256sum -c - \
+    && /usr/local/bin/python -I -B -m pip install --no-cache-dir --no-index --no-deps --no-compile \
+        /runtime-installer/pip-26.2.2+local.openwebui.1-py3-none-any.whl \
+    && /opt/venv/bin/python -I -B -m pip install --no-cache-dir --no-index --no-deps --no-compile \
+        /runtime-installer/pip-26.2.2+local.openwebui.1-py3-none-any.whl \
+    && /usr/local/bin/python -I -B /checks/runtime_installer.py repair-ensurepip /runtime-installer \
+    && /usr/local/bin/python -I -B /checks/runtime_installer.py verify /usr/share/open-webui-derivative/runtime-installer-files.json \
+    && /opt/venv/bin/python -I -B /checks/runtime_installer.py verify /usr/share/open-webui-derivative/runtime-installer-files.json
 FROM runtime-files AS runtime
-RUN --network=none python /checks/test_native_check.py \
-    && python /checks/check.py native \
-    && python /checks/check.py auth /app/backend \
-    && python /checks/check.py imports /app/backend
+RUN --network=none python -B /checks/test_native_check.py \
+    && /usr/local/bin/python -I -B -m unittest discover -s /checks -p test_runtime_installer.py \
+    && /opt/venv/bin/python -I -B -m unittest discover -s /checks -p test_runtime_installer.py \
+    && /opt/venv/bin/python -I -B -m unittest discover -s /checks -p test_dependency_runtime.py \
+    && /usr/local/bin/python -I -B /checks/test_dependency_runtime.py --urllib3-case pip._vendor.urllib3 \
+    && python -B /checks/check.py native \
+    && python -B /checks/check.py auth /app/backend \
+    && python -B /checks/check.py imports /app/backend \
+    && /usr/local/bin/python -I -B -m pip check && /opt/venv/bin/python -I -B -m pip check \
+    && /usr/local/bin/python -I -B /checks/runtime_installer.py verify /usr/share/open-webui-derivative/runtime-installer-files.json \
+        > /usr/share/open-webui-derivative/runtime-installer-local.json \
+    && /opt/venv/bin/python -I -B /checks/runtime_installer.py verify /usr/share/open-webui-derivative/runtime-installer-files.json \
+        > /usr/share/open-webui-derivative/runtime-installer-venv.json
 EXPOSE 8080
 HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
 # Preserve upstream default UID and startup behavior; data-volume ownership is root-controlled.

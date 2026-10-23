@@ -10,6 +10,7 @@ import tempfile
 import threading
 import unittest
 from unittest.mock import patch
+import urllib.error
 import uuid
 
 import load
@@ -100,6 +101,38 @@ class LoadTests(unittest.TestCase):
         self.assertFalse(passed["claims"]["providerInferenceThroughputMeasured"])
         self.assertFalse(passed["claims"]["crossReplicaAuthScopeAvailable"])
 
+    def test_http_status_survives_browser_assertion_without_response_content(self):
+        class Rejected:
+            def open(self, request, timeout):
+                raise urllib.error.HTTPError(request.full_url, 429, "sensitive message",
+                                             {"Sensitive": "sensitive header"},
+                                             io.BytesIO(b'{"error":{"code":"sensitive body"}}'))
+
+        with patch.object(load.urllib.request, "build_opener", return_value=Rejected()):
+            browser = load.client(fixture()["endpoints"][0], fixture())
+        with self.assertRaises(AssertionError) as caught:
+            browser.request("/api/candidates", "POST", {}, expected=202)
+        diagnostic = load.job_error(caught.exception, browser.last_http_status)
+        self.assertEqual({"error": "job_failed", "httpStatus": 429,
+                          "exceptionCategory": "unexpected_http_status"}, diagnostic)
+        self.assertNotIn("sensitive", json.dumps(diagnostic))
+
+    def test_safe_exception_categories_and_allowlisted_check_codes(self):
+        for error, category in ((TimeoutError("sensitive"), "request_timeout"),
+                                (urllib.error.URLError(TimeoutError("sensitive")), "request_timeout"),
+                                (urllib.error.URLError("sensitive"), "connection_failure"),
+                                (ValueError("sensitive"), "response_contract"),
+                                (OSError("sensitive"), "transport_error")):
+            with self.subTest(category=category):
+                diagnostic = load.job_error(error, "sensitive status")
+                self.assertEqual(category, diagnostic["exceptionCategory"])
+                self.assertNotIn("sensitive", json.dumps(diagnostic))
+        self.assertEqual("terminal_timeout", load.job_error(load.CheckFailure("terminal_timeout"), 200)["checkCode"])
+        for value in ("sensitive code", {"sensitive": "value"}):
+            diagnostic = load.job_error(load.CheckFailure(value), None)
+            self.assertNotIn("checkCode", diagnostic)
+            self.assertNotIn("sensitive", json.dumps(diagnostic))
+
     def test_interrupt_cancels_queued_jobs_before_cleanup(self):
         class InterruptedFuture:
             def result(self):
@@ -188,6 +221,8 @@ class LoadTests(unittest.TestCase):
         self.assertFalse(records)
         self.assertFalse(result["cleanupPendingIds"])
         self.assertNotIn("Sensitive", json.dumps(result))
+        self.assertEqual("result", result["jobs"][0]["errorStage"])
+        self.assertEqual("response_contract", result["jobs"][0]["exceptionCategory"])
         self.assertTrue(result["checks"]["clientStreamReadersCancelled"])
         deleted.clear()
         lose_response = True
@@ -197,6 +232,8 @@ class LoadTests(unittest.TestCase):
         self.assertTrue(deleted, "Ambiguous acceptance must be discovered by the fixture-owned marker")
         self.assertFalse(records)
         self.assertFalse(result["cleanupPendingIds"])
+        self.assertEqual("submission", result["jobs"][0]["errorStage"])
+        self.assertEqual("transport_error", result["jobs"][0]["exceptionCategory"])
 
 
 if __name__ == "__main__":

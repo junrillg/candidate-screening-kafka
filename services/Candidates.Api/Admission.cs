@@ -7,9 +7,23 @@ public static class Admission
 {
     public static async Task<bool> ReserveAsync(NpgsqlConnection connection, FlowOptions options, bool newSession, CancellationToken token)
     {
-        // A short transaction budget applies only to admission; status reads and streams never take this lock.
-        await using (var gate = FlowDatabase.Command(connection, "SELECT pg_try_advisory_xact_lock(180722)"))
-        { if (await gate.ExecuteScalarAsync(token) is not true) { return false; } }
+        // Briefly wait for concurrent admissions without extending a stricter caller lock timeout.
+        int previousTimeout;
+        await using (var setting = FlowDatabase.Command(connection,
+            "SELECT setting::integer FROM pg_settings WHERE name='lock_timeout'"))
+        { previousTimeout = (int)(await setting.ExecuteScalarAsync(token))!; }
+        var timeout = previousTimeout == 0 ? 250 : Math.Min(previousTimeout, 250);
+        await FlowDatabase.ExecuteAsync(connection, "SELECT set_config('lock_timeout',@timeout,true)", token,
+            ("timeout", timeout.ToString(System.Globalization.CultureInfo.InvariantCulture) + "ms"));
+        try
+        {
+            await using var gate = FlowDatabase.Command(connection, "SELECT pg_advisory_xact_lock(180722)");
+            await gate.ExecuteNonQueryAsync(token);
+        }
+        catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.LockNotAvailable)
+        { return false; }
+        await FlowDatabase.ExecuteAsync(connection, "SELECT set_config('lock_timeout',@timeout,true)", token,
+            ("timeout", previousTimeout.ToString(System.Globalization.CultureInfo.InvariantCulture) + "ms"));
         if (!newSession)
         {
             await using var queue = FlowDatabase.Command(connection, """
