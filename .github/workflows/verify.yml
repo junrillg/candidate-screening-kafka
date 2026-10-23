@@ -54,36 +54,20 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Source and configuration checks
-        run: ./scripts/check.sh
-      - name: Source security checks
-        run: ./scripts/scan.sh source
-      - name: Build Candidates image
-        run: docker compose build candidates
-      - name: Build Screening image
-        run: docker compose build screening
-      - name: Build database viewer image
-        run: docker compose build pgadmin
-      - name: Build PostgreSQL image
-        run: docker compose build postgres
-      - name: Build local model server image
-        run: docker compose build ollama
-      - name: Build Kafka dependency derivative
-        run: docker compose build kafka
-      - name: Build Kafka inspection viewer
-        run: docker compose build akhq
-      - name: Build local model viewer
-        run: docker compose build openwebui
+      - name: Source, configuration and security checks
+        run: make check-source
+      - name: Build local images sequentially
+        run: make build
       - name: Container security checks
-        run: ./scripts/scan.sh images
+        run: make check-images
       - name: Runtime connectivity and isolation
         run: |
-          ./scripts/start.sh
-          ./scripts/smoke.sh
+          make up
+          make smoke
       - name: Isolated initialization and data-preserving schema upgrades
         run: python3 tests/integration/initializer.py
       - name: Real screening flow
-        run: python3 tests/integration/flow.py
+        run: make sample
       - name: Durable failure and recovery
         run: |
           umask 077

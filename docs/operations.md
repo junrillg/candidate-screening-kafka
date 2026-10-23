@@ -1,14 +1,17 @@
 # Run and inspect the local services
 
-Install Docker with Compose, Git, OpenSSL, curl and Python 3. From the repository root:
+Install GNU Make 3.81 or newer (including macOS Make), a POSIX shell, Docker with Compose on a Linux ARM64 engine, Git, OpenSSL, curl and Python 3. From the repository root:
 
 ```sh
-./scripts/start.sh
+make help
+make up
 ```
 
 Startup creates ignored, owner-only local credentials, builds the application and viewer images, and starts their dependencies. The initial model download needs internet access; the running model server is isolated from external networks. Existing local applications and data volumes are preserved.
 
 Open the workbench, enter a synthetic profile and requirements, and submit for screening. The processing view can be left immediately; saved notices link to completed results. Browser identity is a protected synthetic session, not a production account. Resetting it removes access to its previous records. Text, results and notices expire after seven days; delete a submission sooner through its processing or result view.
+
+`make` defaults to side-effect-free help and supports no custom variables. Targets wrap the existing scripts and native tools; heavy checks and image builds run sequentially even with `make -j`. `make sample` uses the existing integration flow: it submits the synthetic Kafka/.NET profile, checks the real model result and ownership/notification behavior, then deletes its records and prints the verified submission ID. It requires the running stack and performs local inference; its test session is separate from the browser.
 
 Run the standalone integration checks against this local synthetic environment. Recovery checks temporarily interrupt application services and restore them afterward.
 
@@ -27,26 +30,29 @@ The worker has the same health routes on its internal service endpoint. Inspect 
 
 ```sh
 # Restore, formatting, build, tests and dependency auditing
-./scripts/check.sh
-# Secret, source/configuration and image scans
-./scripts/scan.sh
+make test
+# Source checks/security, sequential image builds and image security scans
+make check
+# Individual CI stages: make check-source, make build, make check-images
+# Synthetic submission, verified result and cleanup
+make sample
 # Check running service connections and isolation
-./scripts/smoke.sh
+make smoke
 # Isolated initializer and transactional schema-upgrade checks (requires the running stack)
 python3 tests/integration/initializer.py
-# Synthetic submission, result and selected recovery paths
-python3 tests/integration/flow.py
 # Opt-in recovery faults; requires an idle queue and an owner-only output directory
 RECOVERY_DIR="$(mktemp -d)"
 python3 tests/integration/recovery.py --output "$RECOVERY_DIR/recovery.json"
 # Inspect service health and safe application logs
-docker compose ps
-docker compose logs candidates screening otel-collector
-# Stop without deleting data
-docker compose stop
-# Restart the same services and retained data
-./scripts/start.sh
+make status
+make logs
+# Stop/remove containers and networks without deleting volumes or credentials
+make down
+# Stop, rebuild and restart with retained data and bounded readiness checks
+make restart
 ```
+
+`make up` and `make restart` reuse `scripts/start.sh`, including its readiness deadlines. `make build` prepares local configuration and builds all images without starting services. `make test` reuses `scripts/check.sh`; `make check` adds the existing source and image scanners, preserving their failure exits. Terraform credential-free mock plans and pinned AKHQ CodeQL analysis remain separate CI jobs; see the [Terraform checks](../infra/terraform/README.md#local-configuration-checks). Live runtime, recovery and browser acceptance are separate from `make check`.
 
 Ordinary startup never deletes volumes or rotates existing credentials. PostgreSQL initialization runs only for a fresh database volume; changing an existing role's credentials needs an explicit database rotation. Avoid `down --volumes` unless deliberately discarding all local data.
 

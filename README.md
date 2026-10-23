@@ -34,13 +34,14 @@ The model proposes evidence. Application code verifies it; a person reviews the 
 
 ## Run locally
 
-Use Docker Compose on a Linux ARM64 engine:
+Use GNU Make 3.81 or newer and Docker Compose on a Linux ARM64 engine:
 
 ```sh
-./scripts/start.sh
+make help
+make up
 ```
 
-The source builds require network access for pinned upstream sources and the initial model download. See the [operations guide](docs/operations.md) for credentials and verification commands.
+The source builds require network access for pinned upstream sources and the initial model download. `make sample` verifies a synthetic screening and deletes its test records. Use `make logs`, `make restart` and `make down` for ordinary operation; persistent volumes and credentials are retained. See the [operations guide](docs/operations.md) for prerequisites, viewers and verification commands.
 
 Open the [workbench](http://127.0.0.1:8094). Use synthetic text, submit a profile and requirements, then continue elsewhere while screening runs. Open the saved notice to review the result. See [operations](docs/operations.md) for service viewers and access.
 
