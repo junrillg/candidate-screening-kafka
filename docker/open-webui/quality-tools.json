@@ -1,0 +1,84 @@
+{
+  "packages": {
+    "ast-serialize": {
+      "bytes": 1469931,
+      "filename": "ast_serialize-0.13.1-cp39-abi3-musllinux_1_2_aarch64.whl",
+      "requiresDist": [],
+      "requiresPython": ">=3.7",
+      "sha256": "6ffb0f548a7dc126067fdfb7b2325ab5dfcdeecc29faf5e0f0461c96d6ebfa3d",
+      "url": "https://files.pythonhosted.org/packages/c1/fa/c5f4a545f72a7681e3295bab6e3600ee0862ec4391bed961fe9f735b67e0/ast_serialize-0.13.1-cp39-abi3-musllinux_1_2_aarch64.whl",
+      "version": "0.13.1"
+    },
+    "librt": {
+      "bytes": 530393,
+      "filename": "librt-0.16.0-cp311-cp311-musllinux_1_2_aarch64.whl",
+      "requiresDist": [],
+      "requiresPython": ">=3.9",
+      "sha256": "001bfd59a7d45b17e3e75f2a8c6405280b35e7b84471792778e718c4f368950e",
+      "url": "https://files.pythonhosted.org/packages/bf/5b/ab7292add898ade0d2b5b75d32a923aae315861671aa5c39f5491309f7ae/librt-0.16.0-cp311-cp311-musllinux_1_2_aarch64.whl",
+      "version": "0.16.0"
+    },
+    "mypy": {
+      "bytes": 2800734,
+      "filename": "mypy-2.4.0-py3-none-any.whl",
+      "requiresDist": [
+        "typing_extensions>=4.6.0; python_version < \"3.15\"",
+        "typing_extensions>=4.14.0; python_version >= \"3.15\"",
+        "mypy_extensions>=1.0.0",
+        "pathspec>=1.0.0",
+        "tomli>=1.1.0; python_version < \"3.11\"",
+        "librt>=0.16.0; platform_python_implementation != \"PyPy\"",
+        "ast-serialize<1.0.0,>=0.11.2",
+        "psutil>=4.0; extra == \"dmypy\"",
+        "setuptools>=50; extra == \"mypyc\"",
+        "lxml; extra == \"reports\"",
+        "pip; extra == \"install-types\"",
+        "orjson; extra == \"faster-cache\""
+      ],
+      "requiresPython": ">=3.10",
+      "sha256": "d01c5d26a352acc6d5cf3128225477e1e8465e8d3029d4c345807fbf7f3cf093",
+      "url": "https://files.pythonhosted.org/packages/81/12/46ae8670c98a3cd0286ca5645c2f918f8f6be65edfed81b916010619f668/mypy-2.4.0-py3-none-any.whl",
+      "version": "2.4.0"
+    },
+    "mypy-extensions": {
+      "bytes": 4963,
+      "filename": "mypy_extensions-1.1.0-py3-none-any.whl",
+      "requiresDist": [],
+      "requiresPython": ">=3.8",
+      "sha256": "1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505",
+      "url": "https://files.pythonhosted.org/packages/79/7b/2c79738432f5c924bef5071f933bcc9efd0473bac3b4aa584a6f7c1c8df8/mypy_extensions-1.1.0-py3-none-any.whl",
+      "version": "1.1.0"
+    },
+    "pathspec": {
+      "bytes": 57328,
+      "filename": "pathspec-1.1.1-py3-none-any.whl",
+      "requiresDist": [
+        "hyperscan>=0.7; extra == \"hyperscan\"",
+        "typing-extensions>=4; extra == \"optional\"",
+        "google-re2>=1.1; extra == \"re2\""
+      ],
+      "requiresPython": ">=3.9",
+      "sha256": "a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189",
+      "url": "https://files.pythonhosted.org/packages/f1/d9/7fb5aa316bc299258e68c73ba3bddbc499654a07f151cba08f6153988714/pathspec-1.1.1-py3-none-any.whl",
+      "version": "1.1.1"
+    },
+    "ruff": {
+      "bytes": 10510820,
+      "filename": "ruff-0.15.5-py3-none-musllinux_1_2_aarch64.whl",
+      "requiresDist": [],
+      "requiresPython": ">=3.7",
+      "sha256": "65bb414e5b4eadd95a8c1e4804f6772bbe8995889f203a01f77ddf2d790929dd",
+      "url": "https://files.pythonhosted.org/packages/72/cb/2e5259a7eb2a0f87c08c0fe5bf5825a1e4b90883a52685524596bfc93072/ruff-0.15.5-py3-none-musllinux_1_2_aarch64.whl",
+      "version": "0.15.5"
+    },
+    "typing-extensions": {
+      "bytes": 45571,
+      "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "version": "4.16.0"
+    }
+  },
+  "status": "Publisher artifact hashes pinned; new quality closure not installed or executed",
+  "target": "CPython3.11 / Linux-aarch64 musl"
+}

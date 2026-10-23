@@ -1,0 +1,47 @@
+# Local inspection only; the deployment owner must publish only on loopback.
+micronaut:
+  server:
+    port: 8080
+  security:
+    enabled: true
+    token:
+      jwt:
+        signatures:
+          secret:
+            generator:
+              secret: "${AKHQ_JWT_SECRET}"
+endpoints:
+  all:
+    enabled: false
+    port: 28081
+    sensitive: true
+  health:
+    enabled: true
+    sensitive: false
+    details-visible: NEVER
+akhq:
+  server:
+    access-log:
+      enabled: false
+  audit:
+    enabled: false
+  connections:
+    local:
+      properties:
+        bootstrap.servers: kafka:9092
+  security:
+    default-group: no-roles
+    basic-auth:
+      - username: lab
+        password: "${AKHQ_VIEWER_PASSWORD_HASH}"
+        passwordHash: BCRYPT
+        groups: [lab-reader]
+    roles:
+      lab-readonly:
+        - resources: [TOPIC, TOPIC_DATA, CONSUMER_GROUP, NODE]
+          actions: [READ]
+        - resources: [TOPIC, NODE]
+          actions: [READ_CONFIG]
+    groups:
+      lab-reader:
+        - role: lab-readonly

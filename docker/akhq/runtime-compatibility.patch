@@ -1,0 +1,433 @@
+--- a/build.gradle
++++ b/build.gradle
+@@ -33,6 +33,11 @@
+ 
+ 
+ configurations.all {
++    // One compatible provider per runtime namespace; keep the selected Linux ARM boundary.
++    exclude group: 'com.kjetland', module: 'mbknor-jackson-jsonschema_2.12'
++    exclude group: 'io.spiffe', module: 'grpc-netty-macos-aarch64'
++    exclude group: 'io.swagger.core.v3', module: 'swagger-annotations-jakarta'
++    exclude group: 'com.sun.activation', module: 'jakarta.activation'
+     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+     exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+     exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j2-impl'
+@@ -109,7 +114,7 @@
+     implementation("io.micronaut:micronaut-http-client")
+     implementation("io.micronaut:micronaut-http-server-netty")
+     implementation("io.micronaut:micronaut-jackson-databind")
+-    implementation("io.swagger.core.v3:swagger-annotations")
++    implementation("io.swagger.core.v3:swagger-annotations:2.2.52")
+     runtimeOnly("ch.qos.logback:logback-classic")
+     runtimeOnly("org.yaml:snakeyaml")
+     implementation("io.micronaut.security:micronaut-security-annotations")
+@@ -130,6 +135,12 @@
+     implementation("org.apache.kafka:kafka-group-coordinator:" + kafkaVersion)
+     implementation("org.apache.kafka:kafka-transaction-coordinator:" + kafkaVersion)
+     implementation("org.apache.kafka:kafka-coordinator-common:" + kafkaVersion)
++
++    // Explicit providers are shared by the actual Confluent and Glue callers.
++    implementation("io.yokota:mbknor-jackson-jsonschema-java8:1.0.39.3")
++    runtimeOnly("io.spiffe:grpc-netty-linux:0.8.13")
++    implementation("jakarta.activation:jakarta.activation-api:2.1.4")
++    runtimeOnly("org.eclipse.angus:angus-activation:2.0.3")
+ 
+     // Prefer relocated LZ4 provider explicitly
+     implementation("at.yawk.lz4:lz4-java:1.11.4")
+--- a/src/main/java/org/akhq/modules/AbstractKafkaWrapper.java
++++ b/src/main/java/org/akhq/modules/AbstractKafkaWrapper.java
+@@ -201,12 +201,12 @@
+         return this.describeTopicsOffsets.get(clusterId);
+     }
+ 
+-    private final Map<String, Collection<ConsumerGroupListing>> listConsumerGroups = new HashMap<>();
+-
+-    public Collection<ConsumerGroupListing> listConsumerGroups(String clusterId) throws ExecutionException {
++    private final Map<String, Collection<GroupListing>> listConsumerGroups = new HashMap<>();
++
++    public Collection<GroupListing> listConsumerGroups(String clusterId) throws ExecutionException {
+         if (!this.listConsumerGroups.containsKey(clusterId)) {
+             this.listConsumerGroups.put(clusterId, Logger.call(
+-                kafkaModule.getAdminClient(clusterId).listConsumerGroups().all(),
++                kafkaModule.getAdminClient(clusterId).listGroups(new ListGroupsOptions().withProtocolTypes(Set.of("", "consumer"))).all(),
+                 "List ConsumerGroups",
+                 null
+             ));
+--- a/src/main/java/org/akhq/repositories/ConsumerGroupRepository.java
++++ b/src/main/java/org/akhq/repositories/ConsumerGroupRepository.java
+@@ -10,7 +10,7 @@
+ import org.akhq.utils.PagedList;
+ import org.akhq.utils.Pagination;
+ import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+-import org.apache.kafka.clients.admin.ConsumerGroupListing;
++import org.apache.kafka.clients.admin.GroupListing;
+ import org.apache.kafka.clients.consumer.ConsumerConfig;
+ import org.apache.kafka.clients.consumer.KafkaConsumer;
+ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+@@ -45,7 +45,7 @@
+     public List<String> all(String clusterId, Optional<String> search, List<String> filters) {
+         try {
+             return kafkaWrapper.listConsumerGroups(clusterId).stream()
+-                .map(ConsumerGroupListing::groupId)
++                .map(GroupListing::groupId)
+                 .filter(groupId -> isSearchMatch(search, groupId) && isMatchRegex(filters, groupId))
+                 .sorted(String::compareToIgnoreCase)
+                 .collect(Collectors.toList());
+--- a/src/main/java/org/akhq/configs/security/Oidc.java
++++ b/src/main/java/org/akhq/configs/security/Oidc.java
+@@ -1,7 +1,7 @@
+ package org.akhq.configs.security;
+ 
+ import io.micronaut.context.annotation.ConfigurationProperties;
+-import io.micronaut.security.oauth2.endpoint.token.response.OpenIdClaims;
++import io.micronaut.security.token.ProfileClaims;
+ import lombok.Data;
+ import org.akhq.configs.security.ldap.GroupMapping;
+ import org.akhq.configs.security.ldap.UserMapping;
+@@ -19,7 +19,7 @@
+     @Data
+     public static class Provider {
+         private String label = "Login with OIDC";
+-        private String usernameField = OpenIdClaims.CLAIMS_PREFERRED_USERNAME;
++        private String usernameField = ProfileClaims.CLAIM_PREFERRED_USERNAME;
+         private String groupsField = "roles";
+         private String defaultGroup;
+         private List<GroupMapping> groups = new ArrayList<>();
+--- a/src/test/java/org/akhq/security/authentication/OidcAuthenticationProviderTest.java
++++ b/src/test/java/org/akhq/security/authentication/OidcAuthenticationProviderTest.java
+@@ -9,7 +9,7 @@
+ import io.micronaut.security.authentication.provider.ReactiveAuthenticationProvider;
+ import io.micronaut.security.oauth2.client.DefaultOpenIdProviderMetadata;
+ import io.micronaut.security.oauth2.endpoint.token.request.TokenEndpointClient;
+-import io.micronaut.security.oauth2.endpoint.token.response.OpenIdClaims;
++import io.micronaut.security.token.ProfileClaims;
+ import io.micronaut.security.oauth2.endpoint.token.response.OpenIdTokenResponse;
+ import io.micronaut.security.oauth2.endpoint.token.response.validation.ReactiveOpenIdTokenResponseValidator;
+ import io.micronaut.test.annotation.MockBean;
+@@ -77,7 +77,7 @@
+     @Test
+     void successSingleOidcGroup() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-                .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++                .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+                 .claim("roles", List.of("oidc-limited-group"))
+                 .build();
+         JWT jwt = new PlainJWT(claimsSet);
+@@ -113,7 +113,7 @@
+     @Test
+     void successSingleStringOidcGroup() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-                .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++                .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+                 .claim("roles", "oidc-limited-group")
+                 .build();
+         JWT jwt = new PlainJWT(claimsSet);
+@@ -150,7 +150,7 @@
+     @Test
+     void successWithMultipleOidcGroups() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-                .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++                .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+                 .claim("roles", List.of("oidc-limited-group", "oidc-operator-group"))
+                 .build();
+         JWT jwt = new PlainJWT(claimsSet);
+@@ -196,7 +196,7 @@
+     @Test
+     void successWithOidcGroupAndUserRole() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-                .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user2")
++                .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user2")
+                 .claim("roles", List.of("oidc-limited-group"))
+                 .build();
+         JWT jwt = new PlainJWT(claimsSet);
+@@ -245,7 +245,7 @@
+     @Test
+     void successWithoutRoles() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-                .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++                .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+                 .claim("roles", List.of("oidc-other-group"))
+                 .build();
+         JWT jwt = new PlainJWT(claimsSet);
+--- a/src/test/java/org/akhq/security/claim/OidcDirectClaimAuthenticationProviderTest.java
++++ b/src/test/java/org/akhq/security/claim/OidcDirectClaimAuthenticationProviderTest.java
+@@ -11,7 +11,7 @@
+ import io.micronaut.security.authentication.provider.ReactiveAuthenticationProvider;
+ import io.micronaut.security.oauth2.client.DefaultOpenIdProviderMetadata;
+ import io.micronaut.security.oauth2.endpoint.token.request.TokenEndpointClient;
+-import io.micronaut.security.oauth2.endpoint.token.response.OpenIdClaims;
++import io.micronaut.security.token.ProfileClaims;
+ import io.micronaut.security.oauth2.endpoint.token.response.OpenIdTokenResponse;
+ import io.micronaut.security.oauth2.endpoint.token.response.validation.ReactiveOpenIdTokenResponseValidator;
+ import io.micronaut.test.annotation.MockBean;
+@@ -74,7 +74,7 @@
+         g2.setPatterns(List.of("user.*"));
+ 
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-                .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++                .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+                 .claim("groups", Map.of("limited", List.of(g1, g2)))
+                 .build();
+         JWT jwt = new PlainJWT(claimsSet);
+@@ -105,7 +105,7 @@
+     @Test
+     void failureNoRoles() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-            .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++            .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+             .build();
+         JWT jwt = new PlainJWT(claimsSet);
+ 
+@@ -126,7 +126,7 @@
+     @Test
+     void failureRolesNotAList() {
+         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+-            .claim(OpenIdClaims.CLAIMS_PREFERRED_USERNAME, "user")
++            .claim(ProfileClaims.CLAIM_PREFERRED_USERNAME, "user")
+             .claim("roles", "string") //not a list of roles
+             .build();
+         JWT jwt = new PlainJWT(claimsSet);
+--- /dev/null
++++ b/src/test/java/org/akhq/compatibility/KafkaCompatibilityTest.java
+@@ -0,0 +1,141 @@
++package org.akhq.compatibility;
++
++import io.micronaut.security.token.ProfileClaims;
++import org.akhq.configs.security.Oidc;
++import org.akhq.modules.AbstractKafkaWrapper;
++import org.akhq.modules.KafkaModule;
++import org.akhq.repositories.ConsumerGroupRepository;
++import org.apache.kafka.clients.admin.AdminClient;
++import org.apache.kafka.clients.admin.GroupListing;
++import org.apache.kafka.clients.admin.ListGroupsOptions;
++import org.apache.kafka.clients.admin.ListGroupsResult;
++import org.apache.kafka.common.GroupState;
++import org.apache.kafka.common.GroupType;
++import org.apache.kafka.common.KafkaFuture;
++import org.apache.kafka.common.errors.ClusterAuthorizationException;
++import org.junit.jupiter.api.Test;
++import org.mockito.ArgumentCaptor;
++import org.mockito.MockMakers;
++
++import java.lang.reflect.Field;
++import java.util.Collection;
++import java.util.List;
++import java.util.Optional;
++import java.util.Set;
++import java.util.concurrent.ExecutionException;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.junit.jupiter.api.Assertions.assertThrows;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.times;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++import static org.mockito.Mockito.withSettings;
++
++class KafkaCompatibilityTest {
++    @Test
++    void preservesClassicConsumerAndEmptyGroupIdsWithProtocolOnlyOptions() throws Exception {
++        List<GroupListing> groups = List.of(
++            new GroupListing("classic", Optional.of(GroupType.CLASSIC), "consumer", Optional.of(GroupState.STABLE)),
++            new GroupListing("consumer", Optional.of(GroupType.CONSUMER), "consumer", Optional.of(GroupState.STABLE)),
++            new GroupListing("empty", Optional.of(GroupType.CLASSIC), "", Optional.of(GroupState.EMPTY)));
++        AdminClient admin = subclassMock(AdminClient.class);
++        ListGroupsResult result = subclassMock(ListGroupsResult.class);
++        when(result.all()).thenReturn(KafkaFuture.<Collection<GroupListing>>completedFuture(groups));
++        when(admin.listGroups(any(ListGroupsOptions.class))).thenReturn(result);
++        AbstractKafkaWrapper wrapper = wrapper(admin);
++
++        assertEquals(List.of("classic", "consumer", "empty"),
++            wrapper.listConsumerGroups("fixture").stream().map(GroupListing::groupId).toList());
++        assertSame(groups, wrapper.listConsumerGroups("fixture"));
++        ArgumentCaptor<ListGroupsOptions> options = ArgumentCaptor.forClass(ListGroupsOptions.class);
++        verify(admin, times(1)).listGroups(options.capture());
++        assertEquals(Set.of("", "consumer"), options.getValue().protocolTypes());
++        assertTrue(options.getValue().types().isEmpty());
++        assertTrue(options.getValue().groupStates().isEmpty());
++        assertNull(options.getValue().timeoutMs());
++    }
++
++    @Test
++    void cachesSuccessfulEmptyCollectionWithoutRefetching() throws Exception {
++        AdminClient admin = subclassMock(AdminClient.class);
++        ListGroupsResult result = subclassMock(ListGroupsResult.class);
++        when(result.all()).thenReturn(KafkaFuture.<Collection<GroupListing>>completedFuture(List.of()));
++        when(admin.listGroups(any(ListGroupsOptions.class))).thenReturn(result);
++        AbstractKafkaWrapper wrapper = wrapper(admin);
++
++        assertTrue(wrapper.listConsumerGroups("fixture").isEmpty());
++        assertTrue(wrapper.listConsumerGroups("fixture").isEmpty());
++        verify(admin, times(1)).listGroups(any(ListGroupsOptions.class));
++    }
++
++    @Test
++    void propagatesAllFutureFailureWithoutCachingPartialOrEmptyResults() throws Exception {
++        AdminClient admin = subclassMock(AdminClient.class);
++        ListGroupsResult result = subclassMock(ListGroupsResult.class);
++        KafkaFuture<Collection<GroupListing>> future = mock(withSettings().mockMaker(MockMakers.SUBCLASS));
++        ExecutionException failure = new ExecutionException(new IllegalStateException("fixture failure"));
++        when(future.get()).thenThrow(failure);
++        when(result.all()).thenReturn(future);
++        when(admin.listGroups(any(ListGroupsOptions.class))).thenReturn(result);
++        AbstractKafkaWrapper wrapper = wrapper(admin);
++
++        assertSame(failure, assertThrows(ExecutionException.class, () -> wrapper.listConsumerGroups("fixture")));
++        assertSame(failure, assertThrows(ExecutionException.class, () -> wrapper.listConsumerGroups("fixture")));
++        verify(admin, times(2)).listGroups(any(ListGroupsOptions.class));
++        verify(result, never()).valid();
++        ClusterAuthorizationException denied = new ClusterAuthorizationException("fixture denied");
++        when(future.get()).thenThrow(new ExecutionException(denied));
++        assertSame(denied, assertThrows(ClusterAuthorizationException.class, () -> wrapper.listConsumerGroups("fixture")));
++    }
++
++    @Test
++    void keepsRepositorySearchAuthorizationRegexSortAndCount() throws Exception {
++        AbstractKafkaWrapper wrapper = subclassMock(AbstractKafkaWrapper.class);
++        when(wrapper.listConsumerGroups("fixture")).thenReturn(List.of(
++            new GroupListing("visible-Z", Optional.empty(), "consumer", Optional.empty()),
++            new GroupListing("hidden-a", Optional.empty(), "consumer", Optional.empty()),
++            new GroupListing("visible-a", Optional.empty(), "", Optional.of(GroupState.EMPTY))));
++        ConsumerGroupRepository repository = new ConsumerGroupRepository();
++        setField(ConsumerGroupRepository.class, repository, "kafkaWrapper", wrapper);
++
++        assertEquals(List.of("visible-a", "visible-Z"),
++            repository.all("fixture", Optional.of("VISIBLE"), List.of("visible-.*")));
++        assertEquals(2, repository.all("fixture", Optional.empty(), List.of("visible-.*")).size());
++        assertTrue(repository.all("fixture", Optional.of("missing"), List.of("visible-.*")).isEmpty());
++        ExecutionException failure = new ExecutionException(new IllegalStateException("fixture failure"));
++        when(wrapper.listConsumerGroups("fixture")).thenThrow(failure);
++        assertSame(failure, assertThrows(RuntimeException.class, () ->
++            repository.all("fixture", Optional.empty(), List.of("visible-.*"))).getCause());
++    }
++
++    @Test
++    void preservesExactOidcUsernameClaimDefault() {
++        assertEquals("preferred_username", ProfileClaims.CLAIM_PREFERRED_USERNAME);
++        assertEquals(ProfileClaims.CLAIM_PREFERRED_USERNAME, new Oidc.Provider().getUsernameField());
++    }
++
++    private static AbstractKafkaWrapper wrapper(AdminClient admin) throws Exception {
++        KafkaModule module = subclassMock(KafkaModule.class);
++        when(module.getAdminClient("fixture")).thenReturn(admin);
++        AbstractKafkaWrapper wrapper = new AbstractKafkaWrapper() { };
++        setField(AbstractKafkaWrapper.class, wrapper, "kafkaModule", module);
++        return wrapper;
++    }
++
++    private static <T> T subclassMock(Class<T> type) {
++        // Existing Mockito's supported subclass maker needs no dynamic JVM agent.
++        return mock(type, withSettings().mockMaker(MockMakers.SUBCLASS));
++    }
++
++    private static void setField(Class<?> owner, Object object, String name, Object value) throws Exception {
++        Field field = owner.getDeclaredField(name);
++        field.setAccessible(true);
++        field.set(object, value);
++    }
++}
+--- /dev/null
++++ b/src/test/java/org/akhq/compatibility/DerivativeRuntimeProbe.java
+@@ -0,0 +1,97 @@
++package org.akhq.compatibility;
++
++import com.amazonaws.services.schemaregistry.serializers.json.JsonSerializer;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import com.fasterxml.jackson.databind.node.NullNode;
++import io.confluent.kafka.schemaregistry.json.JsonSchema;
++import io.confluent.kafka.schemaregistry.json.JsonSchemaUtils;
++import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
++import jakarta.activation.CommandMap;
++import jakarta.activation.DataHandler;
++import jakarta.activation.MimetypesFileTypeMap;
++import jakarta.activation.spi.MailcapRegistryProvider;
++import jakarta.activation.spi.MimeTypeRegistryProvider;
++import net.jpountz.lz4.LZ4Factory;
++
++import java.net.URI;
++import java.nio.charset.StandardCharsets;
++import java.util.Arrays;
++import java.util.ServiceLoader;
++import java.util.concurrent.ExecutorService;
++
++/** Fixed local-only packaged-JAR fixture. It creates no sockets, cloud clients or credential providers. */
++public final class DerivativeRuntimeProbe {
++    private DerivativeRuntimeProbe() { }
++
++    public static void main(String[] arguments) throws Exception {
++        require(arguments.length == 0, "Unexpected fixture arguments.");
++        ObjectMapper mapper = new ObjectMapper();
++        Fixture input = new Fixture();
++        JsonSerializer glue = new JsonSerializer(null);
++        require(mapper.readTree(glue.getSchemaDefinition(input)).path("properties").has("value"), "Glue schema missing field.");
++        require(mapper.readTree(glue.serialize(input)).equals(mapper.valueToTree(input)), "Glue JSON roundtrip changed data.");
++        JsonSchema confluent = JsonSchemaUtils.getSchema(input);
++        require(mapper.readTree(confluent.canonicalString()).path("properties").has("value"), "Confluent schema missing field.");
++        confluent.validate(mapper.valueToTree(input));
++        new JsonSchema("{\"type\":[\"string\",\"null\"]}").validate(NullNode.getInstance());
++        passed("Glue and Confluent JSON inference/validation and nullable JSON");
++
++        byte[] original = "local compression fixture local compression fixture".getBytes(StandardCharsets.UTF_8);
++        LZ4Factory lz4 = LZ4Factory.fastestJavaInstance();
++        byte[] compressed = lz4.fastCompressor().compress(original);
++        require(Arrays.equals(original, lz4.fastDecompressor().decompress(compressed, original.length)), "LZ4 roundtrip changed data.");
++        passed("selected LZ4 Java compression roundtrip");
++
++        ProtobufSchema protobuf = new ProtobufSchema(
++            "syntax = \"proto3\"; import \"google/protobuf/any.proto\"; message Fixture { google.protobuf.Any value = 1; }");
++        require(protobuf.toDescriptor().findFieldByName("value").getMessageType().getFullName().equals("google.protobuf.Any"),
++            "Protobuf built-in resolution changed.");
++        passed("selected Protobuf definition parse and built-in resolution");
++
++        require(ServiceLoader.load(MailcapRegistryProvider.class).stream().anyMatch(provider ->
++            provider.type().getName().equals("org.eclipse.angus.activation.MailcapRegistryProviderImpl")), "Angus mailcap provider missing.");
++        require(ServiceLoader.load(MimeTypeRegistryProvider.class).stream().anyMatch(provider ->
++            provider.type().getName().equals("org.eclipse.angus.activation.MimeTypeRegistryProviderImpl")), "Angus MIME provider missing.");
++        require(new MimetypesFileTypeMap().getContentType("fixture.txt").equals("text/plain"), "MIME lookup changed.");
++        require(new DataHandler("fixture", "text/plain").getContent().equals("fixture"), "DataHandler changed content.");
++        require(CommandMap.getDefaultCommandMap().getMimeTypes() != null, "Mailcap registry unavailable.");
++        passed("Activation SPI/MIME/DataHandler local compatibility");
++
++        require(System.getProperty("os.name").equals("Linux"), "Selected fixture requires Linux.");
++        Class<?> factory = Class.forName("io.spiffe.workloadapi.internal.GrpcManagedChannelFactory");
++        require(factory.getDeclaredMethod("newChannel", URI.class, ExecutorService.class) != null, "Linux SPIFFE adapter linkage missing.");
++        requireNativeStack("io.grpc.netty.shaded");
++        requireNativeStack("io.confluent.scp.shaded.io.grpc.netty.shaded");
++        passed("both exact native namespaces and their own gRPC TLS context factories");
++        System.out.println("PASS fixed local packaged compatibility probe; no FAAS/cloud integration claim");
++    }
++
++    private static void requireNativeStack(String prefix) throws Exception {
++        Class<?> epoll = Class.forName(prefix + ".io.netty.channel.epoll.Epoll");
++        if (!(boolean) epoll.getMethod("isAvailable").invoke(null)) {
++            Throwable cause = (Throwable) epoll.getMethod("unavailabilityCause").invoke(null);
++            throw new IllegalStateException("Required Linux native epoll unavailable: " + prefix, cause);
++        }
++        // Use this actual gRPC namespace's supported TLS factory, not an unrelated SSLContext.
++        Object builder = Class.forName(prefix + ".io.grpc.netty.GrpcSslContexts")
++            .getMethod("forClient").invoke(null);
++        Object context = builder.getClass().getMethod("build").invoke(builder);
++        require(context != null, "gRPC TLS context unavailable: " + prefix);
++        System.out.println("PASS required epoll native: " + prefix + "; gRPC TLS context: " + context.getClass().getName());
++        Class.forName(prefix + ".io.netty.util.ReferenceCountUtil")
++            .getMethod("release", Object.class).invoke(null, context);
++    }
++
++    private static void require(boolean condition, String message) {
++        if (!condition) throw new IllegalStateException(message);
++    }
++
++    private static void passed(String name) {
++        System.out.println("PASS " + name);
++    }
++
++    public static final class Fixture {
++        public String value = "fixture";
++        public int count = 2;
++    }
++}

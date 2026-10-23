@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/services/">
+    <Project Path="services/Common/Common.csproj" />
+    <Project Path="services/Candidates.Api/Candidates.Api.csproj" />
+    <Project Path="services/Screening.Worker/Screening.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Foundation.Tests/Foundation.Tests.csproj" />
+  </Folder>
+</Solution>

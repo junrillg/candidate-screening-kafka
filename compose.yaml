@@ -1,0 +1,309 @@
+name: candidate-screening-kafka
+
+x-app: &app
+  logging: {driver: local}
+  init: true
+  restart: unless-stopped
+  read_only: true
+  tmpfs: ["/tmp:uid=1654,gid=1654,mode=0700"]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 128m
+  cpus: 0.5
+  networks: [runtime]
+  depends_on:
+    postgres: {condition: service_healthy}
+    kafka-init: {condition: service_completed_successfully}
+    otel-collector: {condition: service_started}
+
+services:
+  frontend:
+    logging: {driver: local}
+    image: candidate-screening-kafka/frontend:local
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:uid=101,gid=101,mode=0700"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    ports: [127.0.0.1:8094:8080]
+    depends_on: {candidates: {condition: service_healthy}}
+    networks: [runtime, inspection]
+  candidates:
+    <<: *app
+    networks: [runtime, inspection]
+    build:
+      context: .
+      dockerfile: docker/dotnet/Dockerfile
+      args: {PROJECT: Candidates.Api}
+    image: candidate-screening-kafka/candidates:local
+    env_file: [.secrets/candidates.env]
+    environment:
+      Lab__KafkaBootstrapServers: kafka:9092
+      Lab__ServiceName: candidates
+      Lab__OtlpEndpoint: http://otel-collector:4318/v1/logs
+      Lab__CandidatesUrl: http://candidates:8080
+      Lab__ScreeningUrl: http://screening:8080
+      Lab__PublicOrigin: http://127.0.0.1:8094
+      Lab__KeysPath: /keys
+    volumes: [keys:/keys]
+    ports: [127.0.0.1:8095:8080]
+  screening:
+    <<: *app
+    build:
+      context: .
+      dockerfile: docker/dotnet/Dockerfile
+      args: {PROJECT: Screening.Worker}
+    image: candidate-screening-kafka/screening:local
+    env_file: [.secrets/screening.env]
+    environment:
+      Lab__KafkaBootstrapServers: kafka:9092
+      Lab__ServiceName: screening
+      Lab__OtlpEndpoint: http://otel-collector:4318/v1/logs
+      Lab__CandidatesUrl: http://candidates:8080
+      Lab__ScreeningUrl: http://screening:8080
+      Lab__OllamaUrl: http://ollama:11434
+      Lab__AiProvider: Ollama
+      Lab__Model: qwen2.5:1.5b-instruct
+
+  postgres:
+    logging: {driver: local}
+    image: candidate-screening-kafka/postgres:local
+    build:
+      context: .
+      dockerfile: docker/postgres/Dockerfile
+    restart: unless-stopped
+    mem_limit: 192m
+    cpus: 0.5
+    shm_size: 64m
+    env_file: [.secrets/postgres.env]
+    environment:
+      POSTGRES_USER: lab_admin
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --encoding=UTF8 --locale-provider=builtin --builtin-locale=C.UTF-8
+    command: [postgres, -c, max_connections=40, -c, shared_buffers=32MB, -c, log_statement=none, -c, log_min_error_statement=panic]
+    volumes:
+      - postgres_source18_6:/var/lib/postgresql
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/10-services.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U lab_admin -d postgres]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+    networks: [runtime]
+
+  kafka:
+    logging: {driver: local}
+    image: candidate-screening-kafka/kafka:local
+    build:
+      context: .
+      dockerfile: docker/kafka/Dockerfile
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+    environment:
+      CLUSTER_ID: NqnEdODVKkiLTfJvfn1h6A
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_NUM_PARTITIONS: 32
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_RETENTION_BYTES: 8388608
+      KAFKA_LOG_SEGMENT_BYTES: 8388608
+      KAFKA_MESSAGE_MAX_BYTES: 65536
+      KAFKA_HEAP_OPTS: -Xms128m -Xmx256m
+    volumes: [kafka:/var/lib/kafka/data]
+    healthcheck:
+      test: [CMD-SHELL, "KAFKA_HEAP_OPTS='-Xms16m -Xmx48m -XX:MaxMetaspaceSize=64m -XX:ReservedCodeCacheSize=24m -XX:MaxDirectMemorySize=16m -XX:ActiveProcessorCount=1' /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null"]
+      interval: 20s
+      timeout: 10s
+      start_period: 40s
+      retries: 12
+    networks: [runtime]
+  kafka-init:
+    logging: {driver: local}
+    image: candidate-screening-kafka/kafka:local
+    mem_limit: 256m
+    cpus: 0.5
+    environment: {KAFKA_HEAP_OPTS: -Xms64m -Xmx128m}
+    entrypoint: [/bin/sh, /init-topics.sh]
+    volumes: [./docker/kafka/init.sh:/init-topics.sh:ro]
+    depends_on: {kafka: {condition: service_healthy}}
+    networks: [runtime]
+
+  akhq:
+    logging: {driver: local}
+    image: candidate-screening-kafka/akhq:local
+    build: {context: ., dockerfile: docker/akhq/Dockerfile}
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.5
+    env_file: [.secrets/akhq.env]
+    read_only: true
+    tmpfs: ["/tmp:uid=10001,gid=10001,mode=0700"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports: [127.0.0.1:8096:8080]
+    depends_on: {kafka-init: {condition: service_completed_successfully}}
+    networks: [runtime, inspection]
+  pgadmin:
+    logging: {driver: local}
+    image: candidate-screening-kafka/pgadmin:local
+    build: {context: ./docker/pgadmin}
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    env_file: [.secrets/admin.env]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: lab@example.com
+      PGADMIN_DISABLE_POSTFIX: "true"
+      PGADMIN_CONFIG_SERVER_MODE: "True"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGPASS_FILE: /pgpass
+      GUNICORN_THREADS: 4
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+      - ./.secrets/servers.json:/pgadmin4/servers.json:ro
+      - ./.secrets/pgpass:/pgpass:ro
+    ports: [127.0.0.1:8097:80]
+    depends_on: {postgres: {condition: service_healthy}}
+    networks: [runtime, inspection]
+
+  model-init:
+    logging: {driver: local}
+    image: candidate-screening-kafka/ollama:local
+    mem_limit: 2g
+    cpus: 1
+    entrypoint: [/bin/sh, /init-model.sh]
+    environment: {OLLAMA_NO_CLOUD: "1", OLLAMA_NUM_PARALLEL: "1", OLLAMA_MAX_QUEUE: "2"}
+    volumes:
+      - ollama:/root/.ollama
+      - ./docker/ollama/init.sh:/init-model.sh:ro
+    networks: [provisioning]
+  ollama:
+    logging: {driver: local}
+    image: candidate-screening-kafka/ollama:local
+    build:
+      context: .
+      dockerfile: docker/ollama/Dockerfile
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 1
+    environment:
+      OLLAMA_NO_CLOUD: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_QUEUE: "2"
+      OLLAMA_CONTEXT_LENGTH: "2048"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: 1m
+    volumes: [ollama:/root/.ollama]
+    depends_on: {model-init: {condition: service_completed_successfully}}
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+    networks: [runtime]
+  openwebui:
+    logging: {driver: local}
+    image: candidate-screening-kafka/openwebui:local
+    build: {context: ., dockerfile: docker/open-webui/Dockerfile}
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 0.5
+    env_file: [.secrets/openwebui.env]
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_AUTH: "true"
+      WEBUI_ADMIN_EMAIL: lab@example.com
+      WEBUI_ADMIN_NAME: Lab Admin
+      ENABLE_SIGNUP: "false"
+      ENABLE_LOGIN_FORM: "true"
+      CORS_ALLOW_ORIGIN: http://127.0.0.1:8099
+      ENABLE_PERSISTENT_CONFIG: "false"
+      WEBUI_SECRET_KEY_FILE: /app/backend/data/.webui_secret_key
+      OFFLINE_MODE: "true"
+      ENABLE_VERSION_UPDATE_CHECK: "false"
+      ENABLE_OPENAI_API: "false"
+      ENABLE_CODE_EXECUTION: "false"
+      ENABLE_CODE_INTERPRETER: "false"
+      ENABLE_DIRECT_CONNECTIONS: "false"
+      ENABLE_DIRECT_INTEGRATIONS: "false"
+      ENABLE_WEB_SEARCH: "false"
+      ENABLE_IMAGE_GENERATION: "false"
+      ENABLE_IMAGE_PROMPT_GENERATION: "false"
+      ENABLE_IMAGE_EDIT: "false"
+      ENABLE_COMMUNITY_SHARING: "false"
+      ENABLE_EVALUATION_ARENA_MODELS: "false"
+      ENABLE_CHANNELS: "false"
+      ENABLE_APPS: "false"
+      ENABLE_USER_WEBHOOKS: "false"
+      DEFAULT_MODELS: qwen2.5:1.5b-instruct
+      DEFAULT_MODEL_PARAMS: '{"num_ctx":2048,"num_predict":256,"temperature":0}'
+      HF_HUB_OFFLINE: "1"
+      RAG_EMBEDDING_MODEL_AUTO_UPDATE: "false"
+    volumes: [openwebui:/app/backend/data]
+    ports: [127.0.0.1:8099:8080]
+    depends_on: {ollama: {condition: service_healthy}}
+    networks: [runtime, inspection]
+
+  openobserve:
+    logging: {driver: local}
+    image: openobserve/openobserve:v1.1.1@sha256:dae91bc1f9d4c11db54e924d8d25bac7f6c50e080a8f06fc90d9468eaab81b67
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.5
+    env_file: [.secrets/observability.env]
+    environment:
+      ZO_ROOT_USER_EMAIL: lab@example.invalid
+      ZO_DATA_DIR: /data
+      ZO_LOCAL_MODE: "true"
+      ZO_COMPACT_DATA_RETENTION_DAYS: "3"
+      ZO_TELEMETRY: "false"
+    volumes: [openobserve:/data]
+    ports: [127.0.0.1:8098:5080]
+    networks: [runtime, inspection]
+  otel-collector:
+    logging: {driver: local}
+    image: otel/opentelemetry-collector-contrib:0.163.1@sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806
+    restart: unless-stopped
+    mem_limit: 96m
+    cpus: 0.25
+    env_file: [.secrets/observability.env]
+    environment: {GOMEMLIMIT: 72MiB}
+    command: [--config=/etc/otelcol/config.yaml]
+    volumes: [./docker/otel/config.yaml:/etc/otelcol/config.yaml:ro]
+    depends_on: {openobserve: {condition: service_started}}
+    networks: [runtime]
+
+networks:
+  runtime:
+    internal: true
+  inspection:
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+  provisioning: {}
+volumes:
+  keys: {}
+  postgres: {}
+  postgres_source18_6: {}
+  kafka: {}
+  pgadmin: {}
+  ollama: {}
+  openwebui: {}
+  openobserve: {}

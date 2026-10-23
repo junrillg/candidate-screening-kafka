@@ -1,0 +1,168 @@
+gradle.projectsEvaluated {
+    // Commit-addressed archives have no Git repository; never discover a parent repo.
+    def app = gradle.rootProject
+    def gitProperties = app.extensions.getByName('gitProperties')
+    gitProperties.dotGitDirectory.set(app.layout.projectDirectory.dir('.git'))
+    gitProperties.failOnNoGitDirectory = false
+    app.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach { task ->
+        maxParallelForks = 1
+        maxHeapSize = '384m'
+        ignoreFailures = false
+        def retries = task.extensions.findByName('retry')
+        if (retries != null) {
+            retries.maxRetries.set(0)
+            retries.maxFailures.set(1)
+        }
+    }
+    // Preserve compatible providers and unique Shadow resources using standard APIs.
+    def jarTask = app.tasks.named('shadowJar')
+    def extra = app.layout.buildDirectory.dir('converged-runtime-resources')
+    def ownerHashes = [:]
+    def requiredOwners = [
+        'angus-activation-2.0.3.jar': [component: 'org.eclipse.angus:angus-activation:2.0.3', sha256: 'a6bd35c538cf90fff941ad6258c40c08fca0b5c9c3f536c657114f27ce0527a7'],
+        'aws-msk-iam-auth-2.3.7.jar': [component: 'software.amazon.msk:aws-msk-iam-auth:2.3.7', sha256: 'd81b4dd6c9cf94a27eecb6738e022c8af38bcbd40af45843c460d52e2af9d3cd'],
+        'bc-fips-2.1.2.jar': [component: 'org.bouncycastle:bc-fips:2.1.2', sha256: '044fcd8a29d236edea8a5b414406cdae63b475f9ad9f05fe2dc904a277941115'],
+        'cfltfaas-sdk-0.159.0.jar': [component: 'io.confluent.secure.compute:cfltfaas-sdk:0.159.0', sha256: '09f4710f617e392d72dc3573c71429d9bceb747310885b4fad8b1e9b67104065'],
+        'grpc-netty-linux-0.8.13.jar': [component: 'io.spiffe:grpc-netty-linux:0.8.13', sha256: 'b30fe6923a2b431dc30369599cd23d574fdd818ded180a8bdae43d1febf6976d'],
+        'grpc-netty-shaded-1.82.2.jar': [component: 'io.grpc:grpc-netty-shaded:1.82.2', sha256: '45c06e20095f968560ec9c6ce747580de1d0919b540fa2ea134a4837799f73b2'],
+        'jakarta.activation-api-2.1.4.jar': [component: 'jakarta.activation:jakarta.activation-api:2.1.4', sha256: 'c9db52100ce6c8aac95cc39075f95720d2e561b11f8051b81c121ad4effd7004'],
+        'lz4-java-1.11.4.jar': [component: 'at.yawk.lz4:lz4-java:1.11.4', sha256: '58c8e0b813960d2a248e050c353baea73139b48a2ffc55382d42c69707e17325'],
+        'mbknor-jackson-jsonschema-java8-1.0.39.3.jar': [component: 'io.yokota:mbknor-jackson-jsonschema-java8:1.0.39.3', sha256: '5af094a622e57f2d944f37a093a0dcb2de26507422844e7cf688b912a2c18d76'],
+        'netty-nio-client-2.54.3.jar': [component: 'software.amazon.awssdk:netty-nio-client:2.54.3', sha256: 'cd42e43b9ba76e16f737e5c110de94e033b585f454842eec0558d9c1b4b437d4'],
+        'protobuf-java-4.35.1.jar': [component: 'com.google.protobuf:protobuf-java:4.35.1', sha256: 'a4345ba2aa009912ff6f90467fea2d104605256b72c50840d75f13256638a472'],
+        'sdk-core-2.54.3.jar': [component: 'software.amazon.awssdk:sdk-core:2.54.3', sha256: '14a26108c58a27d4cffea1afdfabadd5f064997731fa08f23d4028d859369a8f'],
+        'swagger-annotations-2.2.52.jar': [component: 'io.swagger.core.v3:swagger-annotations:2.2.52', sha256: 'f086c5ca01eb0a2f8b6709d892203629a0fcff6d21701fc2f900f288d12e9c43'],
+    ]
+
+    def hashStream = { input ->
+        def md = java.security.MessageDigest.getInstance('SHA-256')
+        byte[] buffer = new byte[65536]
+        int length
+        while ((length = input.read(buffer)) != -1) { md.update(buffer, 0, length) }
+        md.digest().encodeHex().toString()
+    }
+    def owner = { String path ->
+        if (path.startsWith('google/protobuf/')) return 'protobuf-java-4.35.1.jar'
+        if (path ==~ /META-INF\/native\/(lib)?io_grpc_netty_shaded_.*/) return 'grpc-netty-shaded-1.82.2.jar'
+        if (path.startsWith('META-INF/native-image/io.grpc.netty.shaded.io.netty/')) return 'grpc-netty-shaded-1.82.2.jar'
+        if (path.startsWith('META-INF/native-image/software.amazon.awssdk/sdk-core/')) return 'sdk-core-2.54.3.jar'
+        if (path.startsWith('META-INF/native-image/software.amazon.awssdk/netty-nio-client/')) return 'netty-nio-client-2.54.3.jar'
+        if (path == 'mime.types' || path == 'VersionInfo.java') return 'sdk-core-2.54.3.jar'
+        if (path == 'version.properties') return 'aws-msk-iam-auth-2.3.7.jar'
+        if (path == 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' ||
+            path == 'META-INF/versions/11/OSGI-INF/MANIFEST.MF') return 'bc-fips-2.1.2.jar'
+        null
+    }
+    jarTask.configure { task ->
+        // All different class providers must first converge in the dependency graph.
+        // A byte comparison below rejects a future differing class before this first-wins policy.
+        duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+        failOnDuplicateEntries.set(true)
+        filesMatching(['META-INF/services/**', 'META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule',
+                       'META-INF/io.netty.versions.properties', 'META-INF/config-properties.adoc',
+                       'META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat']) {
+            duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE
+        }
+        // Existing mergeServiceFiles() stays. These are supported Shadow9.4.3 transformers.
+        mergeGroovyExtensionModules()
+        append('META-INF/io.netty.versions.properties')
+        append('META-INF/config-properties.adoc')
+        // Init scripts do not inherit the project's plugin classpath.
+        transform(task.class.classLoader.loadClass(
+            'com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer'))
+        from(extra)
+        doFirst {
+            def directory = extra.get().asFile
+            app.delete(directory)
+            directory.mkdirs()
+            ownerHashes.clear()
+            def classHashes = [:]
+            def seenOwners = [] as Set
+            def attribution = []
+            def artifacts = app.configurations.runtimeClasspath.incoming.artifacts.artifacts.sort { it.id.displayName }
+            artifacts.each { artifact ->
+                def file = artifact.file
+                if (!file.name.endsWith('.jar')) return
+                def fileHash = file.withInputStream { hashStream(it) }
+                if (requiredOwners.containsKey(file.name)) {
+                    def expected = requiredOwners[file.name]
+                    if (artifact.id.componentIdentifier.displayName != expected.component || fileHash != expected.sha256 ||
+                        !seenOwners.add(file.name)) {
+                        throw new GradleException('Locked runtime provider changed: ' + file.name)
+                    }
+                }
+                def record = [component: artifact.id.componentIdentifier.displayName, artifact: file.name,
+                              sha256: fileHash, retained: []]
+                new java.util.zip.ZipFile(file).withCloseable { zip ->
+                    zip.entries().each { entry ->
+                        if (entry.directory) return
+                        if (entry.name.startsWith('/') || entry.name.split('/').contains('..')) {
+                            throw new GradleException('Unsafe dependency resource path.')
+                        }
+                        if (entry.name.endsWith('.class')) {
+                            def digest = zip.getInputStream(entry).withCloseable { hashStream(it) }
+                            if (classHashes.containsKey(entry.name) && classHashes[entry.name] != digest) {
+                                throw new GradleException('Differing runtime class providers: ' + entry.name)
+                            }
+                            classHashes[entry.name] = digest
+                        }
+                        if (owner(entry.name) == file.name) {
+                            ownerHashes[entry.name] = zip.getInputStream(entry).withCloseable { hashStream(it) }
+                        }
+                        // Retain original legal notices AND bundled version/POM evidence by artifact hash.
+                        // This keeps every input attributable; it never deletes metadata to lower a scan count.
+                        if (!entry.name.endsWith('.class') && ((entry.name ==~ /(?i).*(license|notice|copyright|dependencies).*/) ||
+                            (entry.name.startsWith('META-INF/') && !entry.name.startsWith('META-INF/native/') &&
+                             !entry.name.startsWith('META-INF/services/')) || entry.name.startsWith('google/protobuf/') ||
+                            ['mime.types', 'version.properties', 'VersionInfo.java'].contains(entry.name))) {
+                            def target = new File(directory, 'META-INF/third-party/' + fileHash + '/' + entry.name)
+                            target.parentFile.mkdirs()
+                            target.withOutputStream { output -> zip.getInputStream(entry).withCloseable { output << it } }
+                            record.retained.add(entry.name)
+                        }
+                        // cfltfaas classes already have this additional package prefix; retain their native
+                        // bytes at the matching Netty mangled-prefix path, separate from modern grpc native bytes.
+                        if (file.name == 'cfltfaas-sdk-0.159.0.jar' &&
+                            entry.name ==~ /META-INF\/native\/(lib)?io_grpc_netty_shaded_.*/) {
+                            def renamed = entry.name.replaceFirst('(lib)?io_grpc_netty_shaded_',
+                                '$1io_confluent_scp_shaded_io_grpc_netty_shaded_')
+                            def target = new File(directory, renamed)
+                            target.parentFile.mkdirs()
+                            target.withOutputStream { output -> zip.getInputStream(entry).withCloseable { output << it } }
+                        }
+                    }
+                }
+                attribution.add(record)
+            }
+            if (seenOwners != requiredOwners.keySet()) {
+                throw new GradleException('Required locked runtime providers missing: ' + (requiredOwners.keySet() - seenOwners))
+            }
+            new File(directory, 'META-INF/third-party/index.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(attribution)) + '\n'
+        }
+        eachFile { detail ->
+            def selected = owner(detail.path)
+            if (selected != null) {
+                if (!ownerHashes.containsKey(detail.path)) {
+                    throw new GradleException('Required runtime resource owner missing: ' + detail.path)
+                }
+                def digest = detail.file.withInputStream { hashStream(it) }
+                if (digest != ownerHashes[detail.path]) detail.exclude()
+            }
+        }
+    }
+
+    def client = gradle.rootProject.project(':client')
+    def frontend = client.extensions.getByName('frontend')
+    if (frontend.nodeVersion.get() != '26.3.1' || frontend.corepackVersion.get() != '0.35.0') {
+        throw new GradleException('Selected frontend toolchain changed.')
+    }
+    frontend.installScript.set('ci')
+    // Keep downloaded tools outside the source formatter's traversal.
+    frontend.nodeInstallDirectory.set(new File('/opt/akhq-node'))
+    frontend.cacheDirectory.set(new File('/build/frontend-cache'))
+    frontend.maxDownloadAttempts.set(1)
+    if (frontend.installScript.get() != 'ci') {
+        throw new GradleException('Lock-enforced install is required.')
+    }
+}

@@ -17,7 +17,7 @@ The proposed feature is candidate submission → AI-assisted evidence extraction
 | [Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) | Browser change signals, reconnect and heartbeat behavior, combined with durable reconciliation. |
 | [Ollama structured outputs](https://docs.ollama.com/capabilities/structured-outputs) and [FAQ](https://docs.ollama.com/faq) | Request structured evidence while treating factual correctness as an application responsibility. |
 | [Bedrock Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html) | A separate inference adapter behind the same evidence-validation boundary. |
-| [Kafbat quick start](https://ui.docs.kafbat.io/quick-start), [pgAdmin containers](https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html) and [OpenObserve ingestion](https://openobserve.ai/docs/ingestion/logs/otlp/) | Inspect broker delivery, service-owned records and safe correlated logs. Viewer state does not prove business completion. |
+| [AKHQ authentication](https://akhq.io/docs/configuration/authentifications/basic-auth.html) and [API roles](https://akhq.io/docs/configuration/authentifications/groups.html), [pgAdmin containers](https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html) and [OpenObserve ingestion](https://openobserve.ai/docs/ingestion/logs/otlp/) | Authenticate inspection and enforce read-only broker permissions with a JWT signing secret. Inspect service-owned records and safe correlated logs. Viewer state does not prove business completion. |
 
 ## Design choices
 

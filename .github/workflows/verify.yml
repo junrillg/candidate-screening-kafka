@@ -1,0 +1,253 @@
+name: Verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: 1.16.6
+          terraform_wrapper: false
+      - name: Credential-free configuration and mock plans
+        shell: python
+        run: |
+          import os
+          import subprocess
+
+          prefixes = ("AWS_", "TF_VAR_", "TF_CLI_ARGS", "TF_LOG", "TF_TOKEN_")
+          environment = {key: value for key, value in os.environ.items()
+                         if not key.startswith(prefixes)}
+          environment.update({
+              "AWS_CONFIG_FILE": "/dev/null",
+              "AWS_SHARED_CREDENTIALS_FILE": "/dev/null",
+              "AWS_EC2_METADATA_DISABLED": "true",
+              "TF_CLI_CONFIG_FILE": "/dev/null",
+              "TF_IN_AUTOMATION": "true",
+          })
+          for arguments in [
+              ["fmt", "-check", "-recursive"],
+              ["init", "-backend=false", "-input=false", "-lockfile=readonly"],
+              ["validate"],
+              ["test", "-filter=tests/deployment.tftest.hcl"],
+          ]:
+              subprocess.run(["terraform", *arguments], env=environment, check=True)
+  foundation:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Source and configuration checks
+        run: ./scripts/check.sh
+      - name: Source security checks
+        run: ./scripts/scan.sh source
+      - name: Build Candidates image
+        run: docker compose build candidates
+      - name: Build Screening image
+        run: docker compose build screening
+      - name: Build database viewer image
+        run: docker compose build pgadmin
+      - name: Build PostgreSQL image
+        run: docker compose build postgres
+      - name: Build local model server image
+        run: docker compose build ollama
+      - name: Build Kafka dependency derivative
+        run: docker compose build kafka
+      - name: Build Kafka inspection viewer
+        run: docker compose build akhq
+      - name: Build local model viewer
+        run: docker compose build openwebui
+      - name: Container security checks
+        run: ./scripts/scan.sh images
+      - name: Runtime connectivity and isolation
+        run: |
+          ./scripts/start.sh
+          ./scripts/smoke.sh
+      - name: Isolated initialization and data-preserving schema upgrades
+        run: python3 tests/integration/initializer.py
+      - name: Real screening flow
+        run: python3 tests/integration/flow.py
+      - name: Durable failure and recovery
+        run: |
+          umask 077
+          recovery_dir=$(mktemp -d "${RUNNER_TEMP}/recovery.XXXXXX")
+          python3 tests/integration/recovery.py --output "$recovery_dir/result.json"
+      - name: Stop isolated CI services
+        if: always()
+        run: docker compose stop
+  akhq-codeql:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        include:
+          - language: java
+            build-mode: manual
+          - language: javascript
+            build-mode: none
+    env:
+      GRADLE_USER_HOME: ${{ runner.temp }}/akhq-gradle
+      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx1024m -Dorg.gradle.workers.max=1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reconstruct exact selected source and record analysis inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .akhq-codeql/source .akhq-codeql/evidence
+          cd .akhq-codeql
+          curl --fail --location --retry 2 --max-time 120 https://codeload.github.com/tchiotludo/akhq/tar.gz/725a615c22bb38a04c9e1b01e48bb46a7e480ee4 -o source.tgz
+          echo '6c87ff240cbafa55556cba61add089e2d8b278c1e631f336b7c69adb2e8c79bf  source.tgz' | sha256sum -c -
+          tar -xzf source.tgz -C source --strip-components=1
+          cd source
+          # Keep git apply standalone rather than discovering the outer lab Git root.
+          export GIT_CEILING_DIRECTORIES="$(dirname "$PWD")"
+          git apply --check ../../docker/akhq/security-dependencies.patch
+          git apply ../../docker/akhq/security-dependencies.patch
+          git apply --check ../../docker/akhq/frontend-quality.patch
+          git apply ../../docker/akhq/frontend-quality.patch
+          git apply --check ../../docker/akhq/runtime-compatibility.patch
+          git apply ../../docker/akhq/runtime-compatibility.patch
+          sha256sum -c ../../docker/akhq/selected-source.sha256
+          mkdir .lab-tools
+          cp ../../docker/akhq/HashPassword.java .lab-tools/
+          find src/main/java src/test/java .lab-tools -type f -name '*.java' -print0 | sort -z | xargs -0 sha256sum > ../evidence/java-sources.sha256
+          find client/src -type f \( -name '*.js' -o -name '*.jsx' \) -print0 | sort -z | xargs -0 sha256sum > ../evidence/javascript-sources.sha256
+          sha256sum client/vite.config.mjs >> ../evidence/javascript-sources.sha256
+          sha256sum build.gradle gradle.properties settings.gradle gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties client/build.gradle client/package.json client/package-lock.json client/vite.config.mjs > ../evidence/build-inputs.sha256
+          cd ../..
+          unset GIT_CEILING_DIRECTORIES
+          sha256sum docker/akhq/{Dockerfile,HashPassword.java,frontend-ci.init.gradle,security-dependencies.patch,frontend-quality.patch,runtime-compatibility.patch,selected-source.sha256,source-provenance.json} > .akhq-codeql/evidence/canonical-inputs.sha256
+          git rev-parse HEAD > .akhq-codeql/evidence/lab-commit.txt
+      - name: Prepare exact CodeQL bundle and pinned native JDK 25
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 300 https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.3/codeql-bundle-linux-arm64.tar.zst -o "$RUNNER_TEMP/codeql-bundle.tar.zst"
+          echo "82a7828e050573e885ba96620c5b72db985ef4a88118dd2baf14ae7b325064d7  $RUNNER_TEMP/codeql-bundle.tar.zst" | sha256sum -c -
+          docker pull eclipse-temurin:25-jdk-noble@sha256:ba0f0e1a33864105e1d454e88105c617ab40f71062db1f306bf58be32a3f8e5e
+          jdk_container=$(docker create eclipse-temurin:25-jdk-noble@sha256:ba0f0e1a33864105e1d454e88105c617ab40f71062db1f306bf58be32a3f8e5e)
+          trap 'docker rm "$jdk_container" >/dev/null' EXIT
+          docker cp "$jdk_container:/opt/java/openjdk" "$RUNNER_TEMP/akhq-jdk"
+          echo "JAVA_HOME=$RUNNER_TEMP/akhq-jdk" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/akhq-jdk/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/akhq-jdk/bin/java" -version 2> .akhq-codeql/evidence/java-version.txt
+          curl --fail --location --retry 2 --max-time 120 https://repo.maven.apache.org/maven2/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar -o "$RUNNER_TEMP/jbcrypt.jar"
+          echo "e183f6f59404fc1e12073cfea4ace7ea103c900463cd21fb609a7c617ecdf624  $RUNNER_TEMP/jbcrypt.jar" | sha256sum -c -
+      - name: Initialize actual derivative analysis
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          tools: ${{ runner.temp }}/codeql-bundle.tar.zst
+          source-root: .akhq-codeql/source
+          ram: 4096
+          threads: 2
+          # Preserve upstream default security suite; no query/result suppression.
+      - name: Trace fresh Java compilation, including owned authentication helper
+        if: matrix.language == 'java'
+        shell: bash
+        working-directory: .akhq-codeql/source
+        run: |
+          set -euo pipefail
+          # Analysis only: skip resources, so no frontend install/build runs.
+          # Fresh source, no task/build cache: both production and test Java compile.
+          ./gradlew --no-daemon --no-parallel --max-workers=1 --no-build-cache --rerun-tasks --init-script "$GITHUB_WORKSPACE/docker/akhq/frontend-ci.init.gradle" compileJava compileTestJava -x processResources -x processTestResources -x :client:installFrontend -x :client:assembleFrontend 2>&1 | tee ../evidence/java-compile.log
+          mkdir -p "$RUNNER_TEMP/akhq-helper-classes"
+          javac -Xlint:all -Werror -cp "$RUNNER_TEMP/jbcrypt.jar" -d "$RUNNER_TEMP/akhq-helper-classes" .lab-tools/HashPassword.java 2>&1 | tee ../evidence/helper-compile.log
+          sha256sum -c ../evidence/java-sources.sha256
+          sha256sum -c ../evidence/build-inputs.sha256
+          test -s "$RUNNER_TEMP/akhq-helper-classes/HashPassword.class"
+      - name: Analyze and retain SARIF without treating upload as a quality gate
+        id: analyze
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370
+        with:
+          output: .akhq-codeql/sarif
+          upload: never
+          upload-database: false
+          category: akhq-derivative-${{ matrix.language }}
+      - name: Fail on findings or failed analysis diagnostics
+        shell: python
+        env:
+          ANALYZE_OUTCOME: ${{ steps.analyze.outcome }}
+        run: |
+          import collections
+          import json
+          import os
+          from pathlib import Path
+
+          if os.environ.get('ANALYZE_OUTCOME') != 'success':
+              raise SystemExit('CodeQL analyze did not complete successfully')
+          files = list(Path('.akhq-codeql/sarif').glob('*.sarif'))
+          if len(files) != 1:
+              raise SystemExit('Expected one complete SARIF file for this language')
+          data = json.loads(files[0].read_text())
+          runs = data.get('runs', [])
+          if data.get('version') != '2.1.0' or not runs:
+              raise SystemExit('Invalid or empty SARIF analysis')
+          levels = collections.Counter()
+          diagnostics = collections.Counter()
+          artifacts = 0
+          invocation_count = 0
+          for run in runs:
+              if 'CodeQL' not in run.get('tool', {}).get('driver', {}).get('name', ''):
+                  raise SystemExit('Unexpected analysis tool')
+              if run.get('externalPropertyFileReferences'):
+                  raise SystemExit('SARIF must contain all results inline')
+              if not isinstance(run.get('results'), list):
+                  raise SystemExit('Missing or malformed analysis results')
+              if not isinstance(run.get('artifacts'), list) or not run['artifacts']:
+                  raise SystemExit('Missing source/baseline artifacts; review extraction coverage')
+              artifacts += len(run['artifacts'])
+              for result in run['results']:
+                  levels[result.get('level', 'warning')] += 1
+              # Invocations are optional in SARIF; completion proof is the successful
+              # analyze action. If emitted, missing/failed status cannot mean success.
+              invocations = run.get('invocations', [])
+              if not isinstance(invocations, list):
+                  raise SystemExit('Malformed invocation diagnostics')
+              for invocation in invocations:
+                  invocation_count += 1
+                  if invocation.get('executionSuccessful') is not True:
+                      raise SystemExit('Analysis invocation failed')
+                  for key in ('toolExecutionNotifications', 'toolConfigurationNotifications'):
+                      for item in invocation.get(key, []):
+                          diagnostics[item.get('level', 'warning')] += 1
+          counts = {'findings': dict(levels), 'diagnostics': dict(diagnostics), 'totalFindings': sum(levels.values()), 'artifactCount': artifacts, 'invocationCount': invocation_count, 'completionProof': 'CodeQL analyze action success', 'coverageReview': 'Compare native extraction/diagnostic/metric summaries to retained fresh compile/source manifests before static verification'}
+          Path('.akhq-codeql/evidence/result-counts.json').write_text(json.dumps(counts, indent=2) + '\n')
+          print(json.dumps(counts))
+          if sum(levels.values()) or diagnostics['error'] or diagnostics['warning']:
+              raise SystemExit('Unreviewed CodeQL finding or diagnostic')
+      - name: Preserve exact inputs, compiler logs, SARIF and counts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: akhq-codeql-${{ matrix.language }}
+          path: |
+            .akhq-codeql/evidence/
+            .akhq-codeql/sarif/
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1.7
+# Standalone public source route. It exports wheels, not a checked application image.
+FROM python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929 AS inputs
+ARG TARGETARCH
+RUN test "$TARGETARCH" = arm64
+COPY docker/open-webui/ /checks/
+RUN python -I /checks/runtime_installer.py fetch /inputs
+
+FROM inputs AS runtime-installer
+RUN mkdir /admission \
+    && cp /lib/apk/db/installed /admission/base-apk-database.txt \
+    && apk add --no-cache git=2.54.0-r0 \
+    && cp /lib/apk/db/installed /admission/tool-apk-database.txt \
+    && apk info -vv > /admission/tool-apk-packages.txt \
+    && git --version > /admission/git-version.txt \
+    && python -I -B /checks/runtime_installer.py admit-apks /admission
+RUN --network=none python -I -m venv /opt/tools \
+    && /opt/tools/bin/python -I -m pip install --no-index --find-links=/inputs/tools \
+        --only-binary=:all: --require-hashes -r /inputs/tools.lock \
+    && /opt/tools/bin/python -I -m pip check
+RUN --network=none --mount=type=tmpfs,target=/tmp,size=536870912 \
+    /opt/tools/bin/python -I /checks/runtime_installer.py build /inputs /out
+
+FROM scratch AS runtime-installer-export
+COPY --from=runtime-installer /out/ /
+COPY --from=runtime-installer /admission/ /admission/

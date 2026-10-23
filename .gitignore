@@ -11,8 +11,12 @@ config.json
 profile.json
 tracker.json
 architecture-labs/
+.impeccable/
+PRODUCT.md
+DESIGN.md
 **/architecture-labs/
 *.pem
+!docker/dotnet/certs/rds-global-bundle.pem
 *.key
 *.pfx
 *.p12
@@ -26,6 +30,8 @@ architecture-labs/
 **/TestResults/
 **/playwright-report/
 **/test-results/
+**/__pycache__/
+*.py[cod]
 .artifacts/
 .cache/
 

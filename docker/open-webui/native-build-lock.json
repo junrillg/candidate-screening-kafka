@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "pythonBase": "python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929",
+  "target": {
+    "python": "3.11.17",
+    "architecture": "aarch64",
+    "libc": "musl"
+  },
+  "tools": {
+    "pip": {
+      "version": "26.2.2",
+      "filename": "pip-26.2.2-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl",
+      "sha256": "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
+      "requiresPython": ">=3.10",
+      "requiresDist": null
+    },
+    "setuptools": {
+      "version": "84.2.1",
+      "filename": "setuptools-84.2.1-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl",
+      "sha256": "ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2",
+      "requiresPython": ">=3.10",
+      "requiresDist": [
+        "pytest!=8.1.*,>=6; extra == \"test\"",
+        "virtualenv>=13.0.0; extra == \"test\"",
+        "wheel>=0.44.0; extra == \"test\"",
+        "pip>=19.1; extra == \"test\"",
+        "packaging>=26.3; extra == \"test\"",
+        "jaraco.envs>=2.2; extra == \"test\"",
+        "pytest-xdist>=3; extra == \"test\"",
+        "jaraco.path>=3.7.2; extra == \"test\"",
+        "build[virtualenv]>=1.0.3; extra == \"test\"",
+        "filelock>=3.4.0; extra == \"test\"",
+        "ini2toml[lite]>=0.14; extra == \"test\"",
+        "tomli-w>=1.0.0; extra == \"test\"",
+        "pytest-timeout; extra == \"test\"",
+        "pytest-perf; sys_platform != \"cygwin\" and extra == \"test\"",
+        "jaraco.develop>=7.21; (python_version >= \"3.9\" and sys_platform != \"cygwin\") and extra == \"test\"",
+        "pytest-home>=0.5; extra == \"test\"",
+        "pytest-subprocess; extra == \"test\"",
+        "pyproject-hooks!=1.1; extra == \"test\"",
+        "jaraco.test>=5.5; extra == \"test\"",
+        "sphinx>=3.5; extra == \"doc\"",
+        "jaraco.packaging>=9.3; extra == \"doc\"",
+        "rst.linker>=1.9; extra == \"doc\"",
+        "furo; extra == \"doc\"",
+        "sphinx-lint; extra == \"doc\"",
+        "jaraco.tidelift>=1.4; extra == \"doc\"",
+        "pygments-github-lexers==0.0.5; extra == \"doc\"",
+        "sphinx-favicon; extra == \"doc\"",
+        "sphinx-inline-tabs; extra == \"doc\"",
+        "sphinx-reredirects; extra == \"doc\"",
+        "sphinxcontrib-towncrier; extra == \"doc\"",
+        "sphinx-notfound-page<2,>=1; extra == \"doc\"",
+        "pyproject-hooks!=1.1; extra == \"doc\"",
+        "towncrier<24.7; extra == \"doc\"",
+        "packaging>=26.3; extra == \"core\"",
+        "more_itertools>=8.8; extra == \"core\"",
+        "jaraco.text>=3.7; extra == \"core\"",
+        "importlib_metadata>=6; python_version < \"3.10\" and extra == \"core\"",
+        "tomli>=2.0.1; python_version < \"3.11\" and extra == \"core\"",
+        "wheel>=0.43.0; extra == \"core\"",
+        "jaraco.functools>=4; extra == \"core\"",
+        "more_itertools; extra == \"core\"",
+        "pytest-checkdocs>=2.14; extra == \"check\"",
+        "pytest-ruff>=0.2.1; sys_platform != \"cygwin\" and extra == \"check\"",
+        "ruff>=0.13.0; sys_platform != \"cygwin\" and extra == \"check\"",
+        "pytest-cov; extra == \"cover\"",
+        "pytest-enabler>=3.4; extra == \"enabler\"",
+        "pytest-mypy>=1.0.1; platform_python_implementation != \"PyPy\" and extra == \"type\"",
+        "mypy==1.18.*; extra == \"type\"",
+        "importlib_metadata>=7.0.2; python_version < \"3.10\" and extra == \"type\"",
+        "jaraco.develop>=7.21; sys_platform != \"cygwin\" and extra == \"type\""
+      ]
+    },
+    "wheel": {
+      "version": "0.46.3",
+      "filename": "wheel-0.46.3-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/87/22/b76d483683216dde3d67cba61fb2444be8d5be289bf628c13fc0fd90e5f9/wheel-0.46.3-py3-none-any.whl",
+      "sha256": "4b399d56c9d9338230118d705d9737a2a468ccca63d5e813e2a4fc7815d8bc4d",
+      "requiresPython": ">=3.9",
+      "requiresDist": [
+        "packaging>=24.0",
+        "pytest>=6.0.0; extra == \"test\"",
+        "setuptools>=77; extra == \"test\""
+      ]
+    },
+    "pybind11": {
+      "version": "3.0.2",
+      "filename": "pybind11-3.0.2-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/88/c5/e98d9c51f3d5300d5e40ad9037dd6b3b60736fd02ab68dcc98c96be7592d/pybind11-3.0.2-py3-none-any.whl",
+      "sha256": "f8a6500548919cc33bcd220d5f984688326f574fa97f1107f2f4fdb4c6fb019f",
+      "requiresPython": ">=3.8",
+      "requiresDist": [
+        "pybind11-global==3.0.2; extra == \"global\""
+      ]
+    },
+    "absl-py": {
+      "version": "2.5.1",
+      "filename": "absl_py-2.5.1-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/b3/7d/01e62f59e4166af1be6238d9f2b7f3453630c51b8044b412d05b5606532a/absl_py-2.5.1-py3-none-any.whl",
+      "sha256": "721200f2f0e9960f2ca9dc3a2a706b201f5f75d812c158f059cbbe29eeafbdb8",
+      "requiresPython": ">=3.10",
+      "requiresDist": null
+    },
+    "packaging": {
+      "version": "26.3",
+      "filename": "packaging-26.3-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "requiresPython": ">=3.9",
+      "requiresDist": []
+    }
+  },
+  "source": {
+    "name": "google-re2",
+    "version": "1.1.20251105",
+    "url": "https://files.pythonhosted.org/packages/6b/60/805c654ba53d685513df955ee745f71920fe8e6a284faf0f9b9dc19b659c/google_re2-1.1.20251105.tar.gz",
+    "sha256": "1db14a292ee8303b91e91e7c37e05ac17d3c467f29416c79ac70a78be3e65bda",
+    "gitCommit": "927f5d53caf8111721e734cf24724686bb745f55",
+    "sourceDateEpoch": 1762353507,
+    "testUrl": "https://raw.githubusercontent.com/google/re2/927f5d53caf8111721e734cf24724686bb745f55/python/re2_test.py",
+    "testSha256": "5719d8b7e96334d8fa838e0abbf769bfb82a9d6b58d54a4968cd68c5fcc090e1"
+  },
+  "compilerPackages": {
+    "gcc": {
+      "version": "15.2.0-r5",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/main/aarch64/gcc"
+    },
+    "g++": {
+      "version": "15.2.0-r5",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/main/aarch64/g%2B%2B"
+    },
+    "musl-dev": {
+      "version": "1.2.6-r3",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/main/aarch64/musl-dev"
+    },
+    "libgcc": {
+      "version": "15.2.0-r5",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/main/aarch64/libgcc"
+    },
+    "libstdc++": {
+      "version": "15.2.0-r5",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/main/aarch64/libstdc%2B%2B"
+    },
+    "binutils": {
+      "version": "2.45.1-r1",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/main/aarch64/binutils"
+    },
+    "re2-dev": {
+      "version": "2025.11.05-r3",
+      "url": "https://pkgs.alpinelinux.org/package/v3.24/community/aarch64/re2-dev"
+    }
+  },
+  "reproducibility": {
+    "buildPath": "/build/google-re2",
+    "pythonHashSeed": "0",
+    "timezone": "UTC",
+    "compilerFlags": "-O2 -g0 -ffile-prefix-map=/build/google-re2=. -fdebug-prefix-map=/build/google-re2=.",
+    "requiredIndependentBuilds": 2,
+    "toolchainInventorySha256": "f81df47ecfc8f05cbad9074a095261046c8c759dff755f348631367f8eeda27e"
+  },
+  "bootstrapSha256": "96051f6f3340c6d936196c2a320ee585db9dd4eff381f560b36b5adb1c825d57",
+  "buildToolsSha256": "572558c3e80ff3bf1f8cbdc4f16c7bb7e0372cbd43cd8f57736c898069f3f06d"
+}

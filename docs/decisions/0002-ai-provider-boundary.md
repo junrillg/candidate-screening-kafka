@@ -1,8 +1,8 @@
 # ADR 0002: Local evidence extraction with an explicit Bedrock boundary
 
-Status: Accepted design; implementation and runtime checks pending.
+Status: Accepted.
 
-Research checked: 2026-10-19.
+Research checked: 2026-10-20.
 
 ## Context
 
@@ -29,17 +29,16 @@ constrains shape, not factual correctness. Disable cloud features with `OLLAMA_N
 concurrency and queues in runtime configuration. Apply worker deadlines, cancellation,
 bounded retries and response limits.
 
-One application contract returns skill evidence, abstentions and safe provider/usage
+One application contract returns requirement evidence, abstentions and safe provider/model
 metadata. Both providers pass through the same .NET boundary validation: allowed
-skill IDs, exact source snippets, uniqueness, lengths and valid completion. The server
-computes the documented review result deterministically. Snippet occurrence alone
+requirement indexes, exact source snippets, uniqueness, lengths and valid completion. The server
+assigns `EvidenceFound`, `NeedsReview` or `NotEvidenced`; every result requires human review. Snippet occurrence alone
 does not establish positive evidence: negation and irrelevant mentions need explicit
 evaluation cases. Neither provider makes a hiring decision or receives tool access.
 
-## Optional Bedrock implementation
+## Bedrock implementation
 
-Plan a real adapter using **AWSSDK.BedrockRuntime 4.0.101.11**, compiled and tested
-without AWS calls. Select it only through explicit configuration; the default neither
+Use **AWSSDK.BedrockRuntime 4.0.101.12** for the adapter. Select the AWS deployment profile explicitly; the local default neither
 constructs an AWS client nor discovers credentials. There is no automatic fallback.
 
 The scoped reference uses [Nova Micro](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-micro.html),
@@ -49,8 +48,7 @@ JSON through the prompt and reject responses that fail the shared validation; do
 claim schema-constrained generation. Other models require a fresh capability review.
 
 [Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
-requires only `bedrock:InvokeModel` for this direct base-model path. Terraform creates
-one managed policy and attaches it to an externally managed worker role by name:
+requires only `bedrock:InvokeModel` for this direct base-model path. The worker's task-role policy grants that operation on the selected model:
 
 ```json
 {
@@ -63,11 +61,7 @@ one managed policy and attaches it to an externally managed worker role by name:
 }
 ```
 
-Pin AWS provider 6.69.1. Use `aws_iam_policy` and
-[`aws_iam_role_policy_attachment`](https://github.com/hashicorp/terraform-provider-aws/blob/v6.69.1/website/docs/r/iam_role_policy_attachment.html.markdown),
-with credential-free [provider mock tests](https://developer.hashicorp.com/terraform/language/tests/mocking).
-This scope excludes worker deployment, role trust, networking and the rest of AWS.
-Other role policies can grant additional permissions; this attachment cannot revoke them.
+The [Terraform deployment reference](../../infra/terraform/README.md) pins AWS provider 6.69.1 and defines compute, private networking, service identity, durable storage, Kafka, encryption and telemetry. Runtime task roles and secret-injection execution roles are separate. The API has no model-invocation grant. Credential-free [provider mock tests](https://developer.hashicorp.com/terraform/language/tests/mocking) cover configuration invariants; they do not establish a live deployment.
 
 ## Consequences and verification
 
@@ -76,6 +70,4 @@ states that Docker Desktop lacks GPU passthrough. Download size is not a RAM cei
 Model size alone does not establish runtime behavior. Verify real generation,
 negation/injection cases, invalid output, cancellation and restart recovery locally.
 
-Bedrock remains disabled by default. Activating it requires explicit provider
-configuration and AWS access. Compilation, mock tests and IAM inspection cover
-the integration boundary; they do not establish live inference behavior.
+Local execution uses Ollama. The AWS profile selects Bedrock with explicit regional configuration and AWS access. SDK compilation, response-validation tests and configuration inspection cover the integration boundary; they do not establish live inference behavior. The AWS reference has not been deployed.

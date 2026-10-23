@@ -1,10 +1,10 @@
 flowchart TB
-    subgraph Browser["PLANNED · synthetic browser"]
+    subgraph Browser["Synthetic browser"]
         UI["1 · React form"]
         P["2b · Processing<br/>navigation available"]
-        R["8 · Authorized result<br/>or explicit notice link"]
+        R["6 · Authorized result<br/>or explicit notice link"]
     end
-    subgraph Business["PLANNED · small local Compose deployment"]
+    subgraph Business["Local Compose deployment"]
         API["2 · Candidates API"]
         CDB[("Candidates DB<br/>candidate · status<br/>notice · outbox")]
         K["Kafka<br/>submitted · completed<br/>changed"]
@@ -12,8 +12,8 @@ flowchart TB
         AI["Ollama<br/>bounded extraction"]
         SDB[("Screening DB<br/>inbox · result · outbox")]
     end
-    subgraph Operations["PLANNED · loopback operations"]
-        V["Kafbat · pgAdmin<br/>API reference"]
+    subgraph Operations["Loopback operations"]
+        V["AKHQ · pgAdmin<br/>API reference"]
         O["OTel collector<br/>→ OpenObserve OSS"]
     end
     UI -->|"2a · validated POST<br/>cookie + antiforgery"| API
@@ -21,14 +21,16 @@ flowchart TB
     API -->|"202 + candidate ID"| P
     CDB -. "3 · confirmed relay" .-> K
     K -. "4 · candidate-submitted" .-> W
-    W -->|"4a · evidence request"| AI
-    AI -->|"4b · untrusted evidence<br/>validated by worker"| W
-    W -->|"4c · atomic inbox<br/>result + outbox"| SDB
+    W -->|"4a · authorized source fetch"| API
+    W -->|"4b · evidence request"| AI
+    AI -->|"4c · untrusted evidence<br/>validated by worker"| W
+    W -->|"4d · atomic inbox<br/>result + outbox"| SDB
     SDB -. "5 · completion relay" .-> K
-    K -. "6 · screening-completed" .-> API
-    API -->|"6 · atomic status<br/>notice + outbox"| CDB
-    K -. "7 · wakeup to each API replica" .-> API
-    API -. "8 · owner SSE<br/>bounded reconciliation" .-> R
+    K -. "5 · screening-completed" .-> API
+    API -->|"5a · authorized result fetch"| W
+    API -->|"5b · atomic status<br/>notice + outbox"| CDB
+    K -. "6a · wakeup to each API replica" .-> API
+    API -. "6b · owner SSE<br/>bounded reconciliation" .-> R
     P -->|"same job and session only"| R
     API -. "safe telemetry" .-> O
     W -. "safe telemetry" .-> O

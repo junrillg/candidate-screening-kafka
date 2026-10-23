@@ -1,0 +1,200 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.provider.Provider
+import java.security.MessageDigest
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.plugins.quality.Checkstyle
+import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.scala.ScalaCompile
+import org.gradle.api.tasks.testing.Test
+
+def recordResolvedArtifact(String coordinate, File artifactFile, ComponentIdentifier component = null, Project buildRoot = null) {
+    def sha256File = { File file ->
+        def digest = MessageDigest.getInstance('SHA-256')
+        file.withInputStream { stream ->
+            byte[] buffer = new byte[8192]
+            int count
+            while ((count = stream.read(buffer)) != -1) { digest.update(buffer, 0, count) }
+        }
+        digest.digest().encodeHex().toString()
+    }
+    def root = artifactFile.toPath()
+    if (Files.isSymbolicLink(root)) {
+        throw new IllegalArgumentException('Resolved artifact symlink is unsupported')
+    }
+    def record = [coordinate: coordinate, file: artifactFile.name, path: artifactFile.absolutePath]
+    if (Files.isRegularFile(root, LinkOption.NOFOLLOW_LINKS)) {
+        return record + [kind: 'file', sha256: sha256File(artifactFile)]
+    }
+    if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
+        if (Files.notExists(root, LinkOption.NOFOLLOW_LINKS) &&
+                component instanceof ProjectComponentIdentifier && component.build.buildPath == ':' && buildRoot != null) {
+            def parent = root.toAbsolutePath()
+            while (parent != null) {
+                if (Files.isSymbolicLink(parent)) {
+                    throw new IllegalArgumentException('Resolved artifact symlink is unsupported')
+                }
+                parent = parent.parent
+            }
+            def producer = buildRoot.findProject(component.projectPath)
+            def sourceSets = producer?.extensions?.findByName('sourceSets')
+            def output = root.toAbsolutePath().normalize()
+            def sourceSet = sourceSets?.find { candidate ->
+                def task = producer.tasks.findByName(candidate.compileJavaTaskName)
+                task instanceof JavaCompile && task.state.executed && task.state.noSource &&
+                    task.destinationDirectory.get().asFile.toPath().toAbsolutePath().normalize() == output &&
+                    candidate.output.classesDirs.files.any { it.toPath().toAbsolutePath().normalize() == output } &&
+                    candidate.java.files.isEmpty() && task.source.files.isEmpty()
+            }
+            if (sourceSet != null) {
+                def task = producer.tasks.getByName(sourceSet.compileJavaTaskName)
+                return record + [kind: 'absent-project-java-output', component: component.displayName,
+                    producerBuild: component.build.buildPath, producerProject: producer.path, producerTask: task.path,
+                    producerExecuted: true, producerNoSource: true, configuredJavaFiles: 0]
+            }
+        }
+        throw new IllegalArgumentException('Resolved artifact kind is unsupported')
+    }
+    def entries = []
+    def paths = Files.walk(root)
+    try {
+        paths.forEach { path ->
+            def relative = root.relativize(path).toString().replace(File.separator, '/')
+            if (relative.isEmpty()) { relative = '.' }
+            if (Files.isSymbolicLink(path)) {
+                throw new IllegalArgumentException('Resolved artifact symlink is unsupported')
+            }
+            if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+                entries << [path: relative, kind: 'directory']
+            } else if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
+                entries << [path: relative, kind: 'file', bytes: Files.size(path), sha256: sha256File(path.toFile())]
+            } else {
+                throw new IllegalArgumentException('Resolved artifact kind is unsupported')
+            }
+        }
+    } finally {
+        paths.close()
+    }
+    entries.sort { it.path }
+    def manifest = JsonOutput.toJson(entries).getBytes('UTF-8')
+    return record + [kind: 'directory', entries: entries,
+        manifestSha256: MessageDigest.getInstance('SHA-256').digest(manifest).encodeHex().toString()]
+}
+
+gradle.projectsEvaluated {
+    gradle.rootProject.allprojects { project ->
+        project.tasks.withType(Test).configureEach {
+            minHeapSize = '128m'
+            maxHeapSize = '512m'
+            maxParallelForks = 1
+            ignoreFailures = false
+            filter.setFailOnNoMatchingTests(true)
+        }
+        project.tasks.withType(ScalaCompile).configureEach {
+            scalaCompileOptions.forkOptions.memoryMaximumSize = '2g'
+        }
+        project.tasks.withType(Checkstyle).configureEach {
+            minHeapSize = '128m'
+            maxHeapSize = '1g'
+        }
+        // Plugin class is loaded by the project, not assumed on the init-script classpath.
+        project.tasks.matching { it.name in ['spotbugsMain', 'spotbugsTest'] }.configureEach {
+            maxHeapSize = '512m'
+        }
+        project.tasks.withType(JavaExec).configureEach {
+            maxHeapSize = '384m'
+        }
+    }
+}
+
+// A fresh build home carries no scan credentials; explicitly prevent publishing as well.
+gradle.settingsEvaluated { settings ->
+    settings.extensions.getByName('develocity').buildScan.publishing.onlyIf { false }
+}
+
+def evidence = new File('/build/kafka-evidence')
+gradle.taskGraph.whenReady { graph ->
+    evidence.mkdirs()
+    def limits = []
+    graph.allTasks.each { task ->
+        if (task instanceof Test) {
+            assert task.maxHeapSize == '512m' && task.minHeapSize == '128m'
+            assert task.maxParallelForks == 1 && !task.ignoreFailures && task.filter.failOnNoMatchingTests
+            limits << [task: task.path, type: 'Test', heap: task.maxHeapSize, forks: task.maxParallelForks]
+        } else if (task instanceof ScalaCompile) {
+            assert task.scalaCompileOptions.forkOptions.memoryMaximumSize == '2g'
+            limits << [task: task.path, type: 'ScalaCompile', heap: task.scalaCompileOptions.forkOptions.memoryMaximumSize]
+        } else if (task instanceof Checkstyle) {
+            def heap = task.maxHeapSize.get()
+            def minimumHeap = task.minHeapSize.get()
+            assert heap == '1g' && minimumHeap == '128m'
+            limits << [task: task.path, type: 'Checkstyle', heap: heap]
+        } else if (task.name in ['spotbugsMain', 'spotbugsTest']) {
+            def heap = task.maxHeapSize instanceof Provider ? task.maxHeapSize.get() : task.maxHeapSize
+            assert heap == '512m'
+            limits << [task: task.path, type: 'SpotBugs', heap: heap]
+        } else if (task instanceof JavaExec) {
+            assert task.maxHeapSize == '384m'
+            limits << [task: task.path, type: 'JavaExec', heap: task.maxHeapSize]
+        }
+    }
+    assert Runtime.runtime.maxMemory() <= 768L * 1024 * 1024
+    new File(evidence, 'task-limits.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(
+        [gradleVersion: gradle.gradleVersion, gradleMaxHeapBytes: Runtime.runtime.maxMemory(), tasks: limits]))
+}
+
+// Retain observations, not fabricated dependency locks or independent artifact trust claims.
+gradle.buildFinished { result ->
+    if (result.failure == null) {
+        def configurations = []
+        def artifacts = [:]
+        gradle.rootProject.allprojects.each { project ->
+            [project.configurations, project.buildscript.configurations].eachWithIndex { container, kind ->
+                container.findAll { it.canBeResolved && it.state.toString() == 'RESOLVED' }.each { configuration ->
+                    def resolved = configuration.incoming.resolutionResult
+                    configurations << [project: project.path, kind: kind == 0 ? 'project' : 'buildscript',
+                        configuration: configuration.name,
+                        components: resolved.allComponents.collect { it.id.displayName }.sort(),
+                        edges: resolved.allDependencies.findAll { it instanceof ResolvedDependencyResult }.collect {
+                            [requested: it.requested.displayName, selected: it.selected.id.displayName]
+                        }]
+                    configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+                        def coordinate = artifact.moduleVersion.id.toString()
+                        artifacts[coordinate + ':' + artifact.file.absolutePath] = recordResolvedArtifact(coordinate, artifact.file, artifact.id.componentIdentifier, gradle.rootProject)
+                    }
+                }
+            }
+        }
+        new File(evidence, 'resolved-graph.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(
+            [scope: 'observed resolved build/test/runtime configurations', configurations: configurations,
+             artifacts: artifacts.values().sort { it.coordinate + it.path }]))
+        def packages = artifacts.values().sort { it.coordinate + it.path }.withIndex().collect { artifact, index ->
+            def pkg = [SPDXID: "SPDXRef-Dependency-${index}", name: artifact.coordinate + ':' + artifact.file,
+                downloadLocation: 'NOASSERTION', filesAnalyzed: false, licenseConcluded: 'NOASSERTION',
+                licenseDeclared: 'NOASSERTION', copyrightText: 'NOASSERTION']
+            if (artifact.kind == 'file') {
+                pkg.checksums = [[algorithm: 'SHA256', checksumValue: artifact.sha256]]
+            } else if (artifact.kind == 'directory') {
+                pkg.comment = 'Local project directory variant ' + artifact.path + '; per-file and empty-directory manifest in resolved-graph.json; manifest SHA256 ' + artifact.manifestSha256
+            } else {
+                pkg.comment = 'Declared project Java classes output is absent: ' + artifact.producerTask +
+                    ' executed NO-SOURCE with zero configured Java files; producer and path provenance in resolved-graph.json.'
+            }
+            pkg
+        }
+        def spdx = [spdxVersion: 'SPDX-2.3', dataLicense: 'CC0-1.0', SPDXID: 'SPDXRef-DOCUMENT',
+            name: 'Kafka derivative observed build dependency inventory',
+            documentNamespace: 'https://spdx.org/spdxdocs/kafka-build-' + UUID.randomUUID(),
+            creationInfo: [creators: ['Tool: Kafka-Gradle-build-evidence'],
+                created: java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString()],
+            documentComment: 'Observed build/test/runtime artifacts; license conclusions and independent download trust are not asserted.',
+            packages: packages,
+            relationships: packages.collect { [spdxElementId: 'SPDXRef-DOCUMENT', relationshipType: 'DESCRIBES', relatedSpdxElement: it.SPDXID] }]
+        new File(evidence, 'build-dependencies.spdx.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(spdx))
+    }
+}

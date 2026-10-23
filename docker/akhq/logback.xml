@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+  <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.err</target>
+    <!-- Keep event provenance without upstream free-form messages, request data,
+         usernames, exception messages or stack traces. Diagnose via safe probes. -->
+    <encoder><pattern>%d{ISO8601} %-5level %logger{80} viewer-event%n%nopex</pattern></encoder>
+  </appender>
+  <root level="WARN"><appender-ref ref="STDERR" /></root>
+</configuration>

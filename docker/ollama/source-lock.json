@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "version": "0.40.6",
+    "commit": "2476d5ead197abe04629651028f83d48dc75d2b2",
+    "archiveUrl": "https://codeload.github.com/ollama/ollama/tar.gz/2476d5ead197abe04629651028f83d48dc75d2b2",
+    "archiveSha256": "e9e51bc34c6541e144a932e3c4aaa9a131d4c7d458631156719fdcbeed7b066c",
+    "originalGoModSha256": "c8330ba5f762c4bded1401cc8ecadbe85ebe8e5d159fd81da122da986b26cda5",
+    "originalGoSumSha256": "d9a0e2f1149951068ff200abac695a8fc6d6711b7cbf59c5aefb5e0a0340caae"
+  },
+  "runtimeImage": "ollama/ollama:0.40.6@sha256:265409e1d931028a8f7d5a32bcbafddd7bffbc6cc629d77efe9560adf692a5e7",
+  "go": {
+    "version": "1.26.10",
+    "linux-amd64Sha256": "ccfe7ae822d2c2f41f4fe7c956199967a4dac22d0ee0d2b2bfdb440aab3b20c5",
+    "linux-arm64Sha256": "3f4227ce7b206a513e794f1393adb473a07b46e94d18bd15d1c684bbb7319797",
+    "checksumsSource": "https://go.dev/dl/?mode=json&include=all",
+    "downloadUrlTemplate": "https://dl.google.com/go/go1.26.10.linux-{arch}.tar.gz",
+    "redirectProvenance": "Official go.dev/dl archive redirects checked by HTTPS HEAD for linux-amd64 and linux-arm64"
+  },
+  "dependencies": {
+    "github.com/buger/jsonparser": "v1.1.2",
+    "golang.org/x/crypto": "v0.57.0",
+    "golang.org/x/image": "v0.45.0",
+    "golang.org/x/mod": "v0.41.0",
+    "golang.org/x/net": "v0.60.0",
+    "golang.org/x/text": "v0.42.0",
+    "golang.org/x/sys": "v0.48.0",
+    "golang.org/x/term": "v0.46.0",
+    "golang.org/x/sync": "v0.23.0"
+  },
+  "patchSha256": "acaa6fa220cdb650aa4493032edd3697efb0fc10184ba391275323f2432370ae",
+  "nativePayload": "Retained from exact runtime image; only GO_LICENSE is regenerated for changed Go dependencies.",
+  "sources": [
+    "https://github.com/ollama/ollama/blob/2476d5ead197abe04629651028f83d48dc75d2b2/Dockerfile",
+    "https://github.com/ollama/ollama/blob/2476d5ead197abe04629651028f83d48dc75d2b2/docs/development.md",
+    "https://github.com/ollama/ollama/blob/2476d5ead197abe04629651028f83d48dc75d2b2/cmake/generate_go_license.cmake",
+    "https://go.dev/doc/devel/release"
+  ],
+  "patchedModules": {
+    "go.modSha256": "c8f269c2636758a2d5fdaf99d66c5f7f9420bb5685fbe70e1764f23e9f73a9ae",
+    "go.sumSha256": "472671fee722147c5db8bf8d09d4d8093ebd601917b8919036aef37a51dc40dc"
+  }
+}

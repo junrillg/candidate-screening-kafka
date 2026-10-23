@@ -1,0 +1,7 @@
+{
+  "source": "https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem",
+  "documentation": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html",
+  "retrievedAt": "2026-10-20T11:59:54.648511+00:00",
+  "sha256": "90a6f1a7978a1b1b096dca6c57511ca48d3b8cf052f8e704baf358f34ea2f21b",
+  "verification": "HTTPS verified; every PEM parsed as public X509 and currently unexpired; no private-key material; live RDS handshake not performed"
+}

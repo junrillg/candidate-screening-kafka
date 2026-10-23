@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "recipe": {
+    "repository": "https://github.com/docker-library/postgres",
+    "commit": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+    "path": "18/alpine3.24/Dockerfile",
+    "sha256": "0073346318552de18e716061fcb958d021f3a5329e5fe8d6dec5633d62f06a4d"
+  },
+  "postgres": {
+    "version": "18.6",
+    "archive": "https://ftp.postgresql.org/pub/source/v18.6/postgresql-18.6.tar.bz2",
+    "sha256": "555610c24d53e4316da5b7d3fc25c279d96856d5e0e23ee308c328c5fa881d9f",
+    "checksumSource": "https://ftp.postgresql.org/pub/source/v18.6/postgresql-18.6.tar.bz2.sha256"
+  },
+  "bases": {
+    "runtime": "alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6",
+    "gosuBuild": "golang:1.27.3-bookworm@sha256:5c3e9b43cfd3bb95c7937462e29d87ada57b481a96fa23ad0eb61778d7a00110"
+  },
+  "gosu": {
+    "version": "1.19",
+    "commit": "6456aaa0f3c854d199d0f037f068eb97515b7513",
+    "module": "github.com/tianon/gosu@v0.0.0-20250923190938-6456aaa0f3c8",
+    "moduleSum": "h1:HIpXk5mGBQGfOqcaBbRT4Vnss8NPICnMGlD5xTlPBdQ=",
+    "go": "1.27.3",
+    "integrity": "Go checksum database enabled; compiler and module/build metadata retained"
+  },
+  "assets": {
+    "upstream-docker-entrypoint.sh": {
+      "url": "https://raw.githubusercontent.com/docker-library/postgres/e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc/docker-entrypoint.sh",
+      "sha256": "9c440299ae04a0a79d55b8bf03307036d890a40979d2fb698073c9050d4b20a5"
+    },
+    "upstream-docker-ensure-initdb.sh": {
+      "url": "https://raw.githubusercontent.com/docker-library/postgres/e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc/docker-ensure-initdb.sh",
+      "sha256": "922ade6b23a312e65023349b36e873752b15ff38ae4c0ae461d74451e104f312"
+    },
+    "upstream-postgres-image.LICENSE": {
+      "url": "https://raw.githubusercontent.com/docker-library/postgres/e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc/LICENSE",
+      "sha256": "87ffd2c45e3f90cfa3407b5c40ef8333e87c3e875e4895f8b64df758198deafc"
+    }
+  },
+  "omittedOptionalFeatures": [
+    "SQL/XML",
+    "XSLT",
+    "LLVM JIT",
+    "PL/Perl",
+    "PL/Python",
+    "PL/Tcl"
+  ],
+  "retainedFeatures": [
+    "core SQL",
+    "PL/pgSQL",
+    "ICU",
+    "OpenSSL TLS/crypto",
+    "GSSAPI",
+    "LDAP",
+    "libcurl",
+    "liburing",
+    "LZ4",
+    "Zstd",
+    "zlib"
+  ]
+}

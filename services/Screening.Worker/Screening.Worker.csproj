@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.101.12" />
+    <ProjectReference Include="../Common/Common.csproj" />
+  </ItemGroup>
+</Project>

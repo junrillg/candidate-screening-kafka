@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="460" viewBox="0 0 1100 460" role="img" aria-labelledby="title desc">
   <title id="title">Candidate screening event flow</title>
-  <desc id="desc">Planned architecture. React submits to the Candidates API, which stores candidate state and outbox in PostgreSQL. Kafka delivers submitted events to the Screening worker. Ollama proposes evidence. The worker commits validated results and a completion outbox in its own database. Completion events return through Kafka to saved candidate status and browser notifications.</desc>
+  <desc id="desc">React submits to the Candidates API, which stores candidate state and outbox in PostgreSQL. Kafka delivers reference-only submitted events to the Screening worker. Ollama proposes evidence. The worker commits validated results and a completion outbox in its own database. Completion events return through Kafka to saved candidate status and browser notifications.</desc>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#44566c"/></marker>
     <marker id="return" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#146759"/></marker>
@@ -8,7 +8,7 @@
   <rect width="1100" height="460" rx="16" fill="#f7f9fc"/>
   <g font-family="Arial, sans-serif" fill="#15283e">
     <text x="32" y="38" font-size="22" font-weight="700">Candidate submission → validated screening result</text>
-    <text x="32" y="63" font-size="14" fill="#516174">Planned event flow · Separate service ownership · Local inference</text>
+    <text x="32" y="63" font-size="14" fill="#516174">Separate service ownership · Reference-only events · Local inference</text>
     <g stroke="#44566c" stroke-width="2" fill="none" marker-end="url(#arrow)">
       <path d="M220 166H286"/><path d="M486 166H552" stroke-dasharray="7 5"/>
       <path d="M718 166H784" stroke-dasharray="7 5"/>
@@ -31,7 +31,7 @@
       </g>
       <g font-size="13" fill="#516174">
         <text x="126" y="183">Submit · Track · Review</text><text x="386" y="183">Validate · Accept · Authorize</text>
-        <text x="635" y="183">Retained events</text><text x="904" y="183">Extract · Validate · Score</text>
+        <text x="635" y="183">Retained events</text><text x="904" y="183">Extract · Validate · Review</text>
         <text x="253" y="153">POST</text><text x="519" y="121">Submitted</text><text x="751" y="121">Consume</text>
       </g>
       <text x="904" y="98" font-size="14" fill="#146759" font-weight="700">Ollama evidence</text>

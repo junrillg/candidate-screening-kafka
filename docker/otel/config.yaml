@@ -1,0 +1,44 @@
+extensions:
+  basicauth/openobserve:
+    client_auth:
+      username: lab@example.invalid
+      password: ${env:OPENOBSERVE_PASSWORD}
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 72
+    spike_limit_mib: 16
+  batch:
+    timeout: 1s
+    send_batch_size: 64
+    send_batch_max_size: 128
+exporters:
+  otlp_http/openobserve:
+    endpoint: http://openobserve:5080/api/default
+    auth:
+      authenticator: basicauth/openobserve
+    headers:
+      stream-name: foundation
+    timeout: 3s
+    sending_queue:
+      queue_size: 64
+      num_consumers: 1
+    retry_on_failure:
+      initial_interval: 1s
+      max_interval: 5s
+      max_elapsed_time: 30s
+service:
+  extensions: [basicauth/openobserve]
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_http/openobserve]
+  telemetry:
+    logs:
+      level: warn
