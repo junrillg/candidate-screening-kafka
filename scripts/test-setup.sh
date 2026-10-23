@@ -45,7 +45,8 @@ assert not subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'name=^/'
 image_id = subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{.Id}}', image], text=True).strip()
 fixture = scratch / 'compose-auth-check.json'
 fixture.write_text(json.dumps({'services': {'auth-env': {
-    'image': image, 'container_name': name, 'env_file': viewer['env_file'],
+    # Compose versions may inline env_file values despite --no-env-resolution.
+    'image': image, 'container_name': name, 'env_file': viewer.get('env_file', []),
     'environment': viewer.get('environment', {}), 'labels': {'lab.setup.fixture': name},
     'network_mode': 'none', 'read_only': True, 'mem_limit': '128m', 'pids_limit': 64,
     'cpus': 0.5, 'cap_drop': ['ALL'], 'security_opt': ['no-new-privileges:true'],
